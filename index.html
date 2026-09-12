@@ -22,19 +22,15 @@
 
 </head>
 
-
 <body>
 
-
-  <!-- ==================================
+  <!-- ================================
        スタート画面
-  =================================== -->
+  ================================= -->
 
   <div id="startScreen">
 
-    <h1>
-      学校AR
-    </h1>
+    <h1>学校AR</h1>
 
     <p>
       カメラを起動して、
@@ -50,22 +46,19 @@
   </div>
 
 
-
-  <!-- ==================================
+  <!-- ================================
        ARカメラ画面
-  =================================== -->
+  ================================= -->
 
   <div
     id="arScreen"
     class="hidden">
 
 
-    <!-- カメラ領域 -->
-
     <div id="cameraWrapper">
 
 
-      <!-- 実際に撮影される範囲 -->
+      <!-- 実際の撮影範囲 -->
 
       <div id="cameraArea">
 
@@ -86,27 +79,27 @@
           draggable="false">
 
 
-        <!-- カメラズーム -->
+        <!-- 擬似ズーム -->
 
-        <div
-          id="zoomControl"
-          class="hidden">
+        <div id="zoomControl">
 
-          <span class="zoomLabel">
-            －
-          </span>
+          <button
+            class="zoomButton active"
+            data-zoom="1">
+            1x
+          </button>
 
-          <input
-            id="zoomSlider"
-            type="range"
-            min="1"
-            max="1"
-            step="0.1"
-            value="1">
+          <button
+            class="zoomButton"
+            data-zoom="1.5">
+            1.5x
+          </button>
 
-          <span class="zoomLabel">
-            ＋
-          </span>
+          <button
+            class="zoomButton"
+            data-zoom="2">
+            2x
+          </button>
 
         </div>
 
@@ -116,10 +109,9 @@
     </div>
 
 
-
-    <!-- ==================================
+    <!-- ================================
          カメラ操作
-    =================================== -->
+    ================================= -->
 
     <div id="cameraControls">
 
@@ -142,18 +134,15 @@
       </button>
 
 
-
       <!-- シャッター -->
 
       <button
         id="captureButton"
         aria-label="撮影">
 
-        <span id="shutterInner">
-        </span>
+        <span id="shutterInner"></span>
 
       </button>
-
 
 
       <!-- カメラ切替 -->
@@ -179,10 +168,9 @@
   </div>
 
 
-
-  <!-- ==================================
+  <!-- ================================
        撮影結果
-  =================================== -->
+  ================================= -->
 
   <div
     id="resultScreen"
@@ -191,11 +179,9 @@
 
     <div id="resultImageArea">
 
-      <canvas id="captureCanvas">
-      </canvas>
+      <canvas id="captureCanvas"></canvas>
 
     </div>
-
 
 
     <div id="resultControls">
@@ -215,13 +201,10 @@
 
     </div>
 
-
   </div>
 
 
-
   <script src="./app.js"></script>
-
 
 </body>
 
