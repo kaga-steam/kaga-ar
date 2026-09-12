@@ -1,35 +1,197 @@
-/* 撮影結果 */
+html,
+body {
+  margin: 0;
+  padding: 0;
 
-#resultScreen {
+  width: 100%;
+  min-height: 100%;
+
+  font-family: sans-serif;
+
+  background: #111;
+  color: white;
+}
+
+
+/* =========================
+   共通
+========================= */
+
+.hidden {
+  display: none !important;
+}
+
+button,
+#downloadButton {
+  border: none;
+  border-radius: 999px;
+
+  padding: 12px 20px;
+
+  font-size: 16px;
+
+  background: white;
+  color: #222;
+
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+/* =========================
+   スタート画面
+========================= */
+
+#startScreen {
+  min-height: 100dvh;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  padding: 40px 20px;
+
+  background: #111;
+}
+
+#startScreen h1 {
+  margin-top: 30px;
+}
+
+
+/* =========================
+   AR画面
+========================= */
+
+#arScreen {
   position: fixed;
   inset: 0;
 
   width: 100%;
   height: 100dvh;
 
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 
-  align-items: center;
+  background: black;
+}
 
-  box-sizing: border-box;
 
-  padding:
-    8px
-    8px
-    calc(8px + env(safe-area-inset-bottom));
+/* カメラ領域 */
 
-  background: #111;
+#cameraArea {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
 
   overflow: hidden;
 }
 
+
+/* カメラ */
+
+#camera {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* キャラクター */
+
+#character {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 180px;
+
+  transform:
+    translate(-50%, -50%)
+    scale(1);
+
+  transform-origin: center center;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  touch-action: none;
+
+  cursor: grab;
+
+  z-index: 10;
+}
+
+
+/* AR操作ボタン */
+
+#controls {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 20;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  padding:
+    12px
+    12px
+    calc(12px + env(safe-area-inset-bottom));
+
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      transparent,
+      rgba(0, 0, 0, 0.75)
+    );
+}
+
+#captureButton {
+  padding: 15px 24px;
+  font-size: 19px;
+}
+
+
+/* =========================
+   撮影結果画面
+========================= */
+
+#resultScreen {
+  width: 100%;
+  min-height: 100dvh;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  background: #111;
+
+  padding:
+    10px
+    10px
+    calc(20px + env(safe-area-inset-bottom));
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 #resultScreen h2 {
-  margin: 4px 0 8px;
+  margin: 5px 0 10px;
 
   font-size: 18px;
-
-  flex-shrink: 0;
 }
 
 
@@ -42,60 +204,99 @@
   height: auto;
 
   max-width: 100%;
-  max-height: calc(100dvh - 120px);
 
-  object-fit: contain;
-
-  flex: 1;
-
-  min-height: 0;
+  /*
+   * ボタン表示領域を残す
+   */
+  max-height: calc(100dvh - 130px);
 
   margin: 0 auto;
+
+  object-fit: contain;
 }
 
 
-/* 撮影結果のボタン */
+/* 撮影結果ボタン */
 
 .resultButtons {
-  flex-shrink: 0;
-
   display: flex;
+
   justify-content: center;
+  align-items: center;
+
+  flex-wrap: wrap;
+
   gap: 8px;
 
   width: 100%;
 
-  padding-top: 8px;
-
   box-sizing: border-box;
+
+  padding: 10px 0;
 }
 
 
-/* 横画面 */
+/* =========================
+   スマホ横向き
+========================= */
 
 @media (orientation: landscape) {
 
-  #resultScreen {
-    padding: 4px 8px;
+  #controls {
+    padding:
+      5px
+      10px
+      calc(5px + env(safe-area-inset-bottom));
   }
+
+  #controls button {
+    padding: 8px 15px;
+
+    font-size: 14px;
+  }
+
+  #captureButton {
+    padding: 9px 18px;
+
+    font-size: 16px;
+  }
+
+
+  #resultScreen {
+    padding: 4px 8px 8px;
+
+    min-height: 100dvh;
+  }
+
 
   #resultScreen h2 {
     display: none;
   }
 
+
   #captureCanvas {
     max-width: 100%;
-    max-height: calc(100dvh - 70px);
+
+    /*
+     * 横画面なので下に
+     * 約60pxボタン領域を確保
+     */
+    max-height: calc(100dvh - 65px);
   }
 
+
   .resultButtons {
-    height: 60px;
-    padding-top: 4px;
+    padding: 4px 0;
+
+    min-height: 55px;
   }
+
 
   .resultButtons button,
   .resultButtons a {
-    padding: 10px 18px;
+    padding: 8px 15px;
+
     font-size: 14px;
   }
+
 }
