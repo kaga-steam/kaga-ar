@@ -6,7 +6,6 @@
   box-sizing: border-box;
 }
 
-
 html,
 body {
   margin: 0;
@@ -25,7 +24,6 @@ body {
     sans-serif;
 }
 
-
 body {
   overflow: hidden;
 }
@@ -39,10 +37,8 @@ body {
   display: none !important;
 }
 
-
 button,
-a,
-input {
+a {
   font-family: inherit;
 }
 
@@ -68,20 +64,17 @@ input {
   background: #111;
 }
 
-
 #startScreen h1 {
   margin: 0 0 15px;
 
   font-size: 28px;
 }
 
-
 #startScreen p {
   max-width: 500px;
 
   line-height: 1.6;
 }
-
 
 #startButton {
   margin-top: 15px;
@@ -99,7 +92,6 @@ input {
 
   cursor: pointer;
 }
-
 
 #status {
   min-height: 24px;
@@ -154,9 +146,9 @@ input {
 
 
 /* ========================================
-   実際の撮影範囲
+   撮影範囲
 
-   サイズはJavaScriptで決定
+   サイズはJSで計算
 ======================================== */
 
 #cameraArea {
@@ -187,6 +179,13 @@ input {
   object-fit: cover;
 
   background: #000;
+
+  transform: scale(1);
+
+  transform-origin: center center;
+
+  transition:
+    transform 0.15s ease;
 }
 
 
@@ -221,27 +220,26 @@ input {
 
 
 /* ========================================
-   カメラズーム
+   擬似ズーム
 ======================================== */
 
 #zoomControl {
   position: absolute;
 
   left: 50%;
-  bottom: 12px;
+  bottom: 10px;
 
   transform: translateX(-50%);
 
-  z-index: 20;
+  z-index: 30;
 
   display: flex;
 
-  justify-content: center;
   align-items: center;
 
-  gap: 8px;
+  gap: 5px;
 
-  padding: 7px 12px;
+  padding: 4px 5px;
 
   border-radius: 999px;
 
@@ -252,26 +250,28 @@ input {
 }
 
 
-#zoomControl.hidden {
-  display: none !important;
+.zoomButton {
+  width: 42px;
+  height: 32px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: transparent;
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
 }
 
 
-.zoomLabel {
-  font-size: 16px;
-
-  line-height: 1;
-
-  user-select: none;
-}
-
-
-#zoomSlider {
-  width: 160px;
-
-  accent-color: #fff;
-
-  touch-action: manipulation;
+.zoomButton.active {
+  background: #fff;
+  color: #111;
 }
 
 
@@ -324,7 +324,6 @@ input {
   cursor: pointer;
 }
 
-
 .controlIcon {
   width: 40px;
   height: 40px;
@@ -341,7 +340,6 @@ input {
 
   font-size: 23px;
 }
-
 
 .controlLabel {
   font-size: 11px;
@@ -375,7 +373,6 @@ input {
   cursor: pointer;
 }
 
-
 #shutterInner {
   width: 60px;
   height: 60px;
@@ -387,7 +384,6 @@ input {
   transition:
     transform 0.08s ease;
 }
-
 
 #captureButton:active #shutterInner {
   transform: scale(0.9);
@@ -412,7 +408,6 @@ input {
 
   overflow: hidden;
 }
-
 
 #resultScreen.hidden {
   display: none !important;
@@ -440,7 +435,6 @@ input {
 
   overflow: hidden;
 }
-
 
 #captureCanvas {
   display: block;
@@ -480,7 +474,6 @@ input {
   background: #000;
 }
 
-
 #resultControls button,
 #resultControls a {
   min-width: 120px;
@@ -499,12 +492,10 @@ input {
   cursor: pointer;
 }
 
-
 #backButton {
   background: #333;
   color: #fff;
 }
-
 
 #downloadButton {
   background: #fff;
@@ -523,7 +514,7 @@ input {
   }
 
 
-  /* 操作部を右へ */
+  /* 操作部を右側にする */
 
   #cameraControls {
     flex: 0 0 105px;
@@ -551,7 +542,6 @@ input {
     height: 68px;
   }
 
-
   #shutterInner {
     width: 54px;
     height: 54px;
@@ -565,7 +555,6 @@ input {
     font-size: 20px;
   }
 
-
   .controlLabel {
     font-size: 10px;
   }
@@ -576,31 +565,22 @@ input {
   }
 
 
-  /* ======================================
-     横向きズーム
-  ====================================== */
+  /* 横向きズーム */
 
   #zoomControl {
-    left: 50%;
-    right: auto;
-
-    bottom: 10px;
-
-    transform:
-      translateX(-50%);
-
-    padding: 5px 10px;
+    bottom: 8px;
   }
 
 
-  #zoomSlider {
-    width: 130px;
+  .zoomButton {
+    width: 38px;
+    height: 29px;
+
+    font-size: 12px;
   }
 
 
-  /* ======================================
-     撮影結果
-  ====================================== */
+  /* 撮影結果 */
 
   #resultScreen {
     flex-direction: row;
@@ -652,11 +632,6 @@ input {
 
   #character {
     width: 190px;
-  }
-
-
-  #zoomSlider {
-    width: 200px;
   }
 
 }
