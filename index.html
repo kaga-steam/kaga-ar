@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
 
@@ -7,15 +8,20 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <title>学校AR テスト</title>
+  <title>学校AR</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
 
+  <!-- =========================
+       スタート画面
+  ========================== -->
+
   <div id="startScreen">
-    <h1>学校AR テスト</h1>
+
+    <h1>学校AR</h1>
 
     <p>
       カメラを起動して、キャラクターと一緒に撮影できます。
@@ -26,36 +32,82 @@
     </button>
 
     <p id="status"></p>
+
   </div>
 
+
+  <!-- =========================
+       ARカメラ画面
+  ========================== -->
 
   <div id="arScreen" class="hidden">
 
-    <div id="cameraArea">
+    <div id="cameraWrapper">
 
-      <video
-        id="camera"
-        autoplay
-        playsinline>
-      </video>
+      <!-- 撮影範囲 -->
+      <div id="cameraArea">
 
-      <img
-        id="character"
-        src="./images/sample.png"
-        alt="キャラクター"
-        draggable="false">
+        <video
+          id="camera"
+          autoplay
+          playsinline>
+        </video>
+
+        <img
+          id="character"
+          src="./images/sample.png"
+          alt="キャラクター"
+          draggable="false">
+
+      </div>
 
     </div>
 
 
-    <div id="controls">
+    <!-- カメラアプリ風コントロール -->
+    <div id="cameraControls">
 
-      <button id="resetButton">
-        位置をリセット
+      <!-- 左：リセット -->
+      <button
+        id="resetButton"
+        class="sideButton"
+        aria-label="位置をリセット">
+
+        <span class="controlIcon">
+          ↺
+        </span>
+
+        <span class="controlLabel">
+          リセット
+        </span>
+
       </button>
 
-      <button id="captureButton">
-        📷 撮影
+
+      <!-- 中央：シャッター -->
+      <button
+        id="captureButton"
+        aria-label="撮影">
+
+        <span id="shutterInner"></span>
+
+      </button>
+
+
+      <!-- 右：カメラ切替 -->
+      <button
+        id="switchCameraButton"
+        class="sideButton"
+        aria-label="カメラ切替">
+
+        <span class="controlIcon">
+          ⇄
+        </span>
+
+        <span class="controlLabel">
+          カメラ
+        </span>
+
       </button>
 
     </div>
@@ -63,13 +115,19 @@
   </div>
 
 
+  <!-- =========================
+       撮影結果
+  ========================== -->
+
   <div id="resultScreen" class="hidden">
 
-    <h2>撮影結果</h2>
+    <div id="resultImageArea">
 
-    <canvas id="captureCanvas"></canvas>
+      <canvas id="captureCanvas"></canvas>
 
-    <div class="resultButtons">
+    </div>
+
+    <div id="resultControls">
 
       <button id="backButton">
         撮り直す
@@ -78,7 +136,9 @@
       <a
         id="downloadButton"
         download="ar-photo.png">
+
         写真を保存
+
       </a>
 
     </div>
@@ -86,7 +146,8 @@
   </div>
 
 
-  <script src="app.js"></script>
+  <script src="./app.js"></script>
 
 </body>
+
 </html>
