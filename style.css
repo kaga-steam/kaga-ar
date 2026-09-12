@@ -6,6 +6,7 @@
   box-sizing: border-box;
 }
 
+
 html,
 body {
   margin: 0;
@@ -24,6 +25,7 @@ body {
     sans-serif;
 }
 
+
 body {
   overflow: hidden;
 }
@@ -37,8 +39,10 @@ body {
   display: none !important;
 }
 
+
 button,
-a {
+a,
+input {
   font-family: inherit;
 }
 
@@ -64,17 +68,20 @@ a {
   background: #111;
 }
 
+
 #startScreen h1 {
   margin: 0 0 15px;
 
   font-size: 28px;
 }
 
+
 #startScreen p {
   max-width: 500px;
 
   line-height: 1.6;
 }
+
 
 #startButton {
   margin-top: 15px;
@@ -92,6 +99,7 @@ a {
 
   cursor: pointer;
 }
+
 
 #status {
   min-height: 24px;
@@ -123,7 +131,7 @@ a {
 
 
 /* ========================================
-   カメラ領域を置く場所
+   カメラ配置領域
 ======================================== */
 
 #cameraWrapper {
@@ -148,7 +156,7 @@ a {
 /* ========================================
    実際の撮影範囲
 
-   サイズはapp.js側で決める
+   サイズはJavaScriptで決定
 ======================================== */
 
 #cameraArea {
@@ -213,8 +221,62 @@ a {
 
 
 /* ========================================
+   カメラズーム
+======================================== */
+
+#zoomControl {
+  position: absolute;
+
+  left: 50%;
+  bottom: 12px;
+
+  transform: translateX(-50%);
+
+  z-index: 20;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.55);
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+
+#zoomControl.hidden {
+  display: none !important;
+}
+
+
+.zoomLabel {
+  font-size: 16px;
+
+  line-height: 1;
+
+  user-select: none;
+}
+
+
+#zoomSlider {
+  width: 160px;
+
+  accent-color: #fff;
+
+  touch-action: manipulation;
+}
+
+
+/* ========================================
    カメラ操作部
-   縦画面では下
 ======================================== */
 
 #cameraControls {
@@ -262,6 +324,7 @@ a {
   cursor: pointer;
 }
 
+
 .controlIcon {
   width: 40px;
   height: 40px;
@@ -273,10 +336,12 @@ a {
 
   border-radius: 50%;
 
-  background: rgba(255, 255, 255, 0.15);
+  background:
+    rgba(255, 255, 255, 0.15);
 
   font-size: 23px;
 }
+
 
 .controlLabel {
   font-size: 11px;
@@ -310,6 +375,7 @@ a {
   cursor: pointer;
 }
 
+
 #shutterInner {
   width: 60px;
   height: 60px;
@@ -321,6 +387,7 @@ a {
   transition:
     transform 0.08s ease;
 }
+
 
 #captureButton:active #shutterInner {
   transform: scale(0.9);
@@ -345,6 +412,7 @@ a {
 
   overflow: hidden;
 }
+
 
 #resultScreen.hidden {
   display: none !important;
@@ -373,6 +441,7 @@ a {
   overflow: hidden;
 }
 
+
 #captureCanvas {
   display: block;
 
@@ -387,7 +456,7 @@ a {
 
 
 /* ========================================
-   撮影結果ボタン
+   撮影結果操作
 ======================================== */
 
 #resultControls {
@@ -411,6 +480,7 @@ a {
   background: #000;
 }
 
+
 #resultControls button,
 #resultControls a {
   min-width: 120px;
@@ -429,10 +499,12 @@ a {
   cursor: pointer;
 }
 
+
 #backButton {
   background: #333;
   color: #fff;
 }
+
 
 #downloadButton {
   background: #fff;
@@ -451,9 +523,7 @@ a {
   }
 
 
-  /*
-     右側に操作部
-  */
+  /* 操作部を右へ */
 
   #cameraControls {
     flex: 0 0 105px;
@@ -481,6 +551,7 @@ a {
     height: 68px;
   }
 
+
   #shutterInner {
     width: 54px;
     height: 54px;
@@ -494,6 +565,7 @@ a {
     font-size: 20px;
   }
 
+
   .controlLabel {
     font-size: 10px;
   }
@@ -504,7 +576,31 @@ a {
   }
 
 
-  /* 撮影結果 */
+  /* ======================================
+     横向きズーム
+  ====================================== */
+
+  #zoomControl {
+    left: 50%;
+    right: auto;
+
+    bottom: 10px;
+
+    transform:
+      translateX(-50%);
+
+    padding: 5px 10px;
+  }
+
+
+  #zoomSlider {
+    width: 130px;
+  }
+
+
+  /* ======================================
+     撮影結果
+  ====================================== */
 
   #resultScreen {
     flex-direction: row;
@@ -556,6 +652,11 @@ a {
 
   #character {
     width: 190px;
+  }
+
+
+  #zoomSlider {
+    width: 200px;
   }
 
 }
