@@ -32,11 +32,14 @@ const downloadButton =
 const status =
   document.getElementById("status");
 
-const video =
-  document.getElementById("camera");
+const cameraWrapper =
+  document.getElementById("cameraWrapper");
 
 const cameraArea =
   document.getElementById("cameraArea");
+
+const video =
+  document.getElementById("camera");
 
 const character =
   document.getElementById("character");
@@ -54,7 +57,8 @@ const ctx =
 
 let stream = null;
 
-let facingMode = "environment";
+let facingMode =
+  "environment";
 
 
 /* ========================================
@@ -63,6 +67,7 @@ let facingMode = "environment";
 
 let characterX = 0;
 let characterY = 0;
+
 let characterScale = 1;
 
 
@@ -70,9 +75,125 @@ let characterScale = 1;
    Pointer
 ======================================== */
 
-const pointers = new Map();
+const pointers =
+  new Map();
 
-let previousDistance = null;
+let previousDistance =
+  null;
+
+
+/* ========================================
+   撮影フレームサイズ計算
+
+   縦 → 3:4
+   横 → 4:3
+
+   cameraWrapperの中に
+   必ず完全に収める
+======================================== */
+
+function fitCameraFrame() {
+
+  const style =
+    getComputedStyle(
+      cameraWrapper
+    );
+
+
+  const paddingX =
+    parseFloat(style.paddingLeft) +
+    parseFloat(style.paddingRight);
+
+
+  const paddingY =
+    parseFloat(style.paddingTop) +
+    parseFloat(style.paddingBottom);
+
+
+  const availableWidth =
+    Math.max(
+      1,
+      cameraWrapper.clientWidth -
+      paddingX
+    );
+
+
+  const availableHeight =
+    Math.max(
+      1,
+      cameraWrapper.clientHeight -
+      paddingY
+    );
+
+
+  const portrait =
+    window.matchMedia(
+      "(orientation: portrait)"
+    ).matches;
+
+
+  /*
+   * width / height
+   */
+
+  const targetAspect =
+    portrait
+      ? 3 / 4
+      : 4 / 3;
+
+
+  const availableAspect =
+    availableWidth /
+    availableHeight;
+
+
+  let frameWidth;
+  let frameHeight;
+
+
+  if (
+    availableAspect >
+    targetAspect
+  ) {
+
+    /*
+     * 横幅に余裕がある
+     * → 高さ基準
+     */
+
+    frameHeight =
+      availableHeight;
+
+    frameWidth =
+      frameHeight *
+      targetAspect;
+
+  }
+  else {
+
+    /*
+     * 高さに余裕がある
+     * → 横幅基準
+     */
+
+    frameWidth =
+      availableWidth;
+
+    frameHeight =
+      frameWidth /
+      targetAspect;
+
+  }
+
+
+  cameraArea.style.width =
+    `${Math.floor(frameWidth)}px`;
+
+
+  cameraArea.style.height =
+    `${Math.floor(frameHeight)}px`;
+
+}
 
 
 /* ========================================
@@ -86,24 +207,41 @@ startButton.addEventListener(
     status.textContent =
       "カメラを起動しています...";
 
+
     try {
 
       await startCamera();
+
 
       startScreen.classList.add(
         "hidden"
       );
 
+
       arScreen.classList.remove(
         "hidden"
       );
 
-      resetCharacter();
+
+      /*
+       * AR画面表示後に計算
+       */
+
+      requestAnimationFrame(
+        () => {
+
+          fitCameraFrame();
+
+          resetCharacter();
+
+        }
+      );
 
     }
     catch (error) {
 
       console.error(error);
+
 
       status.textContent =
         "カメラ起動失敗：" +
@@ -127,10 +265,7 @@ async function startCamera() {
 
 
   /*
-   * スマホカメラで4:3を優先
-   *
-   * exact にすると対応していない端末で
-   * エラーになる可能性があるため ideal。
+   * 4:3を優先して要求
    */
 
   const constraints = {
@@ -173,21 +308,13 @@ async function startCamera() {
   await video.play();
 
 
-  /*
-   * 実際にブラウザが選択した
-   * カメラ解像度を確認
-   */
-
   const track =
     stream.getVideoTracks()[0];
 
-  const settings =
-    track.getSettings();
-
 
   console.log(
-    "Camera settings:",
-    settings
+    "Camera:",
+    track.getSettings()
   );
 
 }
@@ -217,14 +344,14 @@ function stopCamera() {
 
 
 /* ========================================
-   前面・背面切替
+   カメラ切替
 ======================================== */
 
 switchCameraButton.addEventListener(
   "click",
   async () => {
 
-    const oldFacingMode =
+    const previousMode =
       facingMode;
 
 
@@ -244,12 +371,8 @@ switchCameraButton.addEventListener(
       console.error(error);
 
 
-      /*
-       * 切替失敗時は元へ戻す
-       */
-
       facingMode =
-        oldFacingMode;
+        previousMode;
 
 
       try {
@@ -272,7 +395,7 @@ switchCameraButton.addEventListener(
 
 
 /* ========================================
-   キャラクター更新
+   キャラクター
 ======================================== */
 
 function updateCharacterTransform() {
@@ -289,10 +412,6 @@ function updateCharacterTransform() {
 
 }
 
-
-/* ========================================
-   キャラクター初期化
-======================================== */
 
 function resetCharacter() {
 
@@ -317,7 +436,7 @@ resetButton.addEventListener(
 
 
 /* ========================================
-   Pointer Events
+   Pointer
 ======================================== */
 
 character.addEventListener(
@@ -340,10 +459,6 @@ character.addEventListener(
   pointerUp
 );
 
-
-/* ========================================
-   Pointer Down
-======================================== */
 
 function pointerDown(event) {
 
@@ -385,10 +500,6 @@ function pointerDown(event) {
 }
 
 
-/* ========================================
-   Pointer Move
-======================================== */
-
 function pointerMove(event) {
 
   if (
@@ -420,24 +531,20 @@ function pointerMove(event) {
 
   /*
    * 1本指
-   * 移動
    */
 
   if (
     pointers.size === 1
   ) {
 
-    const dx =
+    characterX +=
       event.clientX -
       previous.x;
 
-    const dy =
+
+    characterY +=
       event.clientY -
       previous.y;
-
-
-    characterX += dx;
-    characterY += dy;
 
 
     updateCharacterTransform();
@@ -447,7 +554,6 @@ function pointerMove(event) {
 
   /*
    * 2本指
-   * 拡大縮小
    */
 
   if (
@@ -472,13 +578,9 @@ function pointerMove(event) {
       previousDistance > 0
     ) {
 
-      const ratio =
+      characterScale *=
         distance /
         previousDistance;
-
-
-      characterScale *=
-        ratio;
 
 
       characterScale =
@@ -504,10 +606,6 @@ function pointerMove(event) {
 }
 
 
-/* ========================================
-   Pointer Up
-======================================== */
-
 function pointerUp(event) {
 
   pointers.delete(
@@ -527,23 +625,14 @@ function pointerUp(event) {
 }
 
 
-/* ========================================
-   距離
-======================================== */
-
 function getDistance(
-  pointA,
-  pointB
+  a,
+  b
 ) {
 
   return Math.hypot(
-
-    pointA.x -
-      pointB.x,
-
-    pointA.y -
-      pointB.y
-
+    a.x - b.x,
+    a.y - b.y
   );
 
 }
@@ -569,8 +658,8 @@ function capture() {
 
 
   if (
-    videoWidth === 0 ||
-    videoHeight === 0
+    !videoWidth ||
+    !videoHeight
   ) {
 
     alert(
@@ -582,13 +671,9 @@ function capture() {
   }
 
 
-  /*
-   * 現在画面上に表示されている
-   * 撮影フレーム
-   */
-
   const areaRect =
     cameraArea.getBoundingClientRect();
+
 
   const charRect =
     character.getBoundingClientRect();
@@ -597,71 +682,59 @@ function capture() {
   /*
    * ★重要
    *
-   * 1080×1440などに固定しない。
-   *
-   * cameraAreaと完全に同じ
-   * 縦横比でCanvasを作る。
+   * 現在の撮影枠そのものの比率で
+   * Canvasを作る
    */
 
-
-  const areaAspect =
+  const frameAspect =
     areaRect.width /
     areaRect.height;
 
 
-  const longSide = 1440;
+  const longSide =
+    1440;
 
 
   if (
-    areaRect.height >=
+    areaRect.height >
     areaRect.width
   ) {
-
-    /*
-     * 縦画面
-     */
 
     canvas.height =
       longSide;
 
+
     canvas.width =
       Math.round(
         longSide *
-        areaAspect
+        frameAspect
       );
 
   }
   else {
 
-    /*
-     * 横画面
-     */
-
     canvas.width =
       longSide;
+
 
     canvas.height =
       Math.round(
         longSide /
-        areaAspect
+        frameAspect
       );
 
   }
 
 
   /*
-   * videoの実際の縦横比
+   * object-fit: coverと
+   * 同じ切り取り
    */
 
   const videoAspect =
     videoWidth /
     videoHeight;
 
-
-  /*
-   * object-fit: cover と
-   * 同じ範囲を計算
-   */
 
   let sourceX = 0;
   let sourceY = 0;
@@ -675,18 +748,12 @@ function capture() {
 
   if (
     videoAspect >
-    areaAspect
+    frameAspect
   ) {
-
-    /*
-     * videoが撮影枠より横長
-     *
-     * 左右を切り取る
-     */
 
     sourceWidth =
       videoHeight *
-      areaAspect;
+      frameAspect;
 
 
     sourceX =
@@ -698,15 +765,9 @@ function capture() {
   }
   else {
 
-    /*
-     * videoが撮影枠より縦長
-     *
-     * 上下を切り取る
-     */
-
     sourceHeight =
       videoWidth /
-      areaAspect;
+      frameAspect;
 
 
     sourceY =
@@ -727,7 +788,7 @@ function capture() {
 
 
   /*
-   * カメラ画像
+   * 背景
    */
 
   ctx.drawImage(
@@ -735,74 +796,55 @@ function capture() {
 
     sourceX,
     sourceY,
-
     sourceWidth,
     sourceHeight,
 
     0,
     0,
-
     canvas.width,
     canvas.height
   );
 
 
   /*
-   * キャラクター座標変換
+   * キャラクター
    */
 
-  const canvasScaleX =
+  const scaleX =
     canvas.width /
     areaRect.width;
 
-  const canvasScaleY =
+
+  const scaleY =
     canvas.height /
     areaRect.height;
 
 
-  const characterCanvasX =
+  ctx.drawImage(
+    character,
+
     (
       charRect.left -
       areaRect.left
     ) *
-    canvasScaleX;
+      scaleX,
 
-
-  const characterCanvasY =
     (
       charRect.top -
       areaRect.top
     ) *
-    canvasScaleY;
+      scaleY,
 
-
-  const characterCanvasWidth =
     charRect.width *
-    canvasScaleX;
+      scaleX,
 
-
-  const characterCanvasHeight =
     charRect.height *
-    canvasScaleY;
-
-
-  /*
-   * キャラクター描画
-   */
-
-  ctx.drawImage(
-    character,
-
-    characterCanvasX,
-    characterCanvasY,
-
-    characterCanvasWidth,
-    characterCanvasHeight
+      scaleY
   );
 
 
   /*
-   * 保存用Blob
+   * 保存
    */
 
   canvas.toBlob(
@@ -834,6 +876,7 @@ function capture() {
       downloadButton.href =
         url;
 
+
       downloadButton.dataset.url =
         url;
 
@@ -845,10 +888,6 @@ function capture() {
 
   );
 
-
-  /*
-   * 結果画面
-   */
 
   arScreen.classList.add(
     "hidden"
@@ -863,7 +902,7 @@ function capture() {
 
 
 /* ========================================
-   撮り直す
+   撮り直し
 ======================================== */
 
 backButton.addEventListener(
@@ -879,24 +918,46 @@ backButton.addEventListener(
       "hidden"
     );
 
+
+    requestAnimationFrame(
+      fitCameraFrame
+    );
+
   }
 );
 
 
 /* ========================================
-   画面回転
+   画面サイズ・回転変更
+
+   アドレスバーの開閉も
+   resizeで再計算される
 ======================================== */
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    if (
+      !arScreen.classList.contains(
+        "hidden"
+      )
+    ) {
+
+      fitCameraFrame();
+
+    }
+
+  }
+);
+
 
 window.addEventListener(
   "orientationchange",
   () => {
 
     setTimeout(
-      () => {
-
-        updateCharacterTransform();
-
-      },
+      fitCameraFrame,
       300
     );
 
