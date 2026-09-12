@@ -44,6 +44,12 @@ const video =
 const character =
   document.getElementById("character");
 
+const zoomControl =
+  document.getElementById("zoomControl");
+
+const zoomSlider =
+  document.getElementById("zoomSlider");
+
 const canvas =
   document.getElementById("captureCanvas");
 
@@ -66,6 +72,7 @@ let facingMode =
 ======================================== */
 
 let characterX = 0;
+
 let characterY = 0;
 
 let characterScale = 1;
@@ -83,13 +90,10 @@ let previousDistance =
 
 
 /* ========================================
-   撮影フレームサイズ計算
+   撮影フレーム計算
 
-   縦 → 3:4
-   横 → 4:3
-
-   cameraWrapperの中に
-   必ず完全に収める
+   縦：3:4
+   横：4:3
 ======================================== */
 
 function fitCameraFrame() {
@@ -101,13 +105,21 @@ function fitCameraFrame() {
 
 
   const paddingX =
-    parseFloat(style.paddingLeft) +
-    parseFloat(style.paddingRight);
+    parseFloat(
+      style.paddingLeft
+    ) +
+    parseFloat(
+      style.paddingRight
+    );
 
 
   const paddingY =
-    parseFloat(style.paddingTop) +
-    parseFloat(style.paddingBottom);
+    parseFloat(
+      style.paddingTop
+    ) +
+    parseFloat(
+      style.paddingBottom
+    );
 
 
   const availableWidth =
@@ -132,10 +144,6 @@ function fitCameraFrame() {
     ).matches;
 
 
-  /*
-   * width / height
-   */
-
   const targetAspect =
     portrait
       ? 3 / 4
@@ -156,13 +164,9 @@ function fitCameraFrame() {
     targetAspect
   ) {
 
-    /*
-     * 横幅に余裕がある
-     * → 高さ基準
-     */
-
     frameHeight =
       availableHeight;
+
 
     frameWidth =
       frameHeight *
@@ -171,13 +175,9 @@ function fitCameraFrame() {
   }
   else {
 
-    /*
-     * 高さに余裕がある
-     * → 横幅基準
-     */
-
     frameWidth =
       availableWidth;
+
 
     frameHeight =
       frameWidth /
@@ -197,7 +197,7 @@ function fitCameraFrame() {
 
 
 /* ========================================
-   カメラ起動
+   スタート
 ======================================== */
 
 startButton.addEventListener(
@@ -222,10 +222,6 @@ startButton.addEventListener(
         "hidden"
       );
 
-
-      /*
-       * AR画面表示後に計算
-       */
 
       requestAnimationFrame(
         () => {
@@ -308,14 +304,26 @@ async function startCamera() {
   await video.play();
 
 
+  /*
+   * 実際に選択された
+   * カメラ情報
+   */
+
   const track =
     stream.getVideoTracks()[0];
 
 
   console.log(
-    "Camera:",
+    "Camera settings:",
     track.getSettings()
   );
+
+
+  /*
+   * ズーム確認
+   */
+
+  setupCameraZoom();
 
 }
 
@@ -334,13 +342,185 @@ function stopCamera() {
   stream
     .getTracks()
     .forEach(
-      track => track.stop()
+      track => {
+
+        track.stop();
+
+      }
     );
 
 
   stream = null;
 
 }
+
+
+/* ========================================
+   カメラズーム設定
+======================================== */
+
+function setupCameraZoom() {
+
+  if (!stream) {
+
+    zoomControl.classList.add(
+      "hidden"
+    );
+
+    return;
+
+  }
+
+
+  const track =
+    stream.getVideoTracks()[0];
+
+
+  /*
+   * getCapabilities非対応なら
+   * ズームUIを出さない
+   */
+
+  if (
+    typeof track.getCapabilities !==
+    "function"
+  ) {
+
+    zoomControl.classList.add(
+      "hidden"
+    );
+
+    return;
+
+  }
+
+
+  const capabilities =
+    track.getCapabilities();
+
+
+  const settings =
+    track.getSettings();
+
+
+  console.log(
+    "Camera capabilities:",
+    capabilities
+  );
+
+
+  /*
+   * zoom非対応
+   */
+
+  if (
+    !capabilities.zoom ||
+    capabilities.zoom.min === undefined ||
+    capabilities.zoom.max === undefined
+  ) {
+
+    zoomControl.classList.add(
+      "hidden"
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * ズーム対応
+   */
+
+  const minZoom =
+    capabilities.zoom.min;
+
+
+  const maxZoom =
+    capabilities.zoom.max;
+
+
+  const stepZoom =
+    capabilities.zoom.step ||
+    0.1;
+
+
+  const currentZoom =
+    settings.zoom !== undefined
+      ? settings.zoom
+      : minZoom;
+
+
+  zoomSlider.min =
+    minZoom;
+
+
+  zoomSlider.max =
+    maxZoom;
+
+
+  zoomSlider.step =
+    stepZoom;
+
+
+  zoomSlider.value =
+    currentZoom;
+
+
+  zoomControl.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+/* ========================================
+   ズーム変更
+======================================== */
+
+zoomSlider.addEventListener(
+  "input",
+  async () => {
+
+    if (!stream) {
+      return;
+    }
+
+
+    const track =
+      stream.getVideoTracks()[0];
+
+
+    const zoom =
+      Number(
+        zoomSlider.value
+      );
+
+
+    try {
+
+      await track.applyConstraints({
+
+        advanced: [
+          {
+            zoom: zoom
+          }
+        ]
+
+      });
+
+    }
+    catch (error) {
+
+      console.error(
+        "カメラズーム変更失敗:",
+        error
+      );
+
+    }
+
+  }
+);
 
 
 /* ========================================
@@ -356,7 +536,8 @@ switchCameraButton.addEventListener(
 
 
     facingMode =
-      facingMode === "environment"
+      facingMode ===
+      "environment"
         ? "user"
         : "environment";
 
@@ -365,11 +546,20 @@ switchCameraButton.addEventListener(
 
       await startCamera();
 
+
+      requestAnimationFrame(
+        fitCameraFrame
+      );
+
     }
     catch (error) {
 
       console.error(error);
 
+
+      /*
+       * 元に戻す
+       */
 
       facingMode =
         previousMode;
@@ -395,7 +585,7 @@ switchCameraButton.addEventListener(
 
 
 /* ========================================
-   キャラクター
+   キャラクター表示更新
 ======================================== */
 
 function updateCharacterTransform() {
@@ -413,9 +603,14 @@ function updateCharacterTransform() {
 }
 
 
+/* ========================================
+   キャラクターリセット
+======================================== */
+
 function resetCharacter() {
 
   characterX = 0;
+
   characterY = 0;
 
   characterScale = 1;
@@ -436,7 +631,7 @@ resetButton.addEventListener(
 
 
 /* ========================================
-   Pointer
+   Pointer Down
 ======================================== */
 
 character.addEventListener(
@@ -444,15 +639,18 @@ character.addEventListener(
   pointerDown
 );
 
+
 character.addEventListener(
   "pointermove",
   pointerMove
 );
 
+
 character.addEventListener(
   "pointerup",
   pointerUp
 );
+
 
 character.addEventListener(
   "pointercancel",
@@ -479,6 +677,10 @@ function pointerDown(event) {
   );
 
 
+  /*
+   * 2本指になった瞬間の距離
+   */
+
   if (
     pointers.size === 2
   ) {
@@ -499,6 +701,10 @@ function pointerDown(event) {
 
 }
 
+
+/* ========================================
+   Pointer Move
+======================================== */
 
 function pointerMove(event) {
 
@@ -531,6 +737,7 @@ function pointerMove(event) {
 
   /*
    * 1本指
+   * キャラクター移動
    */
 
   if (
@@ -554,6 +761,7 @@ function pointerMove(event) {
 
   /*
    * 2本指
+   * キャラクター拡大縮小
    */
 
   if (
@@ -606,6 +814,10 @@ function pointerMove(event) {
 }
 
 
+/* ========================================
+   Pointer Up
+======================================== */
+
 function pointerUp(event) {
 
   pointers.delete(
@@ -625,14 +837,21 @@ function pointerUp(event) {
 }
 
 
+/* ========================================
+   2点間距離
+======================================== */
+
 function getDistance(
   a,
   b
 ) {
 
   return Math.hypot(
+
     a.x - b.x,
+
     a.y - b.y
+
   );
 
 }
@@ -653,6 +872,7 @@ function capture() {
   const videoWidth =
     video.videoWidth;
 
+
   const videoHeight =
     video.videoHeight;
 
@@ -671,6 +891,10 @@ function capture() {
   }
 
 
+  /*
+   * 画面上の撮影範囲
+   */
+
   const areaRect =
     cameraArea.getBoundingClientRect();
 
@@ -680,10 +904,8 @@ function capture() {
 
 
   /*
-   * ★重要
-   *
-   * 現在の撮影枠そのものの比率で
-   * Canvasを作る
+   * 撮影フレームと
+   * 完全に同じ比率にする
    */
 
   const frameAspect =
@@ -700,6 +922,10 @@ function capture() {
     areaRect.width
   ) {
 
+    /*
+     * 縦
+     */
+
     canvas.height =
       longSide;
 
@@ -712,6 +938,10 @@ function capture() {
 
   }
   else {
+
+    /*
+     * 横
+     */
 
     canvas.width =
       longSide;
@@ -727,8 +957,7 @@ function capture() {
 
 
   /*
-   * object-fit: coverと
-   * 同じ切り取り
+   * 実際のvideo比率
    */
 
   const videoAspect =
@@ -736,7 +965,13 @@ function capture() {
     videoHeight;
 
 
+  /*
+   * object-fit: coverと
+   * 完全に同じ切り取りを計算
+   */
+
   let sourceX = 0;
+
   let sourceY = 0;
 
   let sourceWidth =
@@ -750,6 +985,11 @@ function capture() {
     videoAspect >
     frameAspect
   ) {
+
+    /*
+     * videoの方が横長
+     * → 左右をカット
+     */
 
     sourceWidth =
       videoHeight *
@@ -765,6 +1005,11 @@ function capture() {
   }
   else {
 
+    /*
+     * videoの方が縦長
+     * → 上下をカット
+     */
+
     sourceHeight =
       videoWidth /
       frameAspect;
@@ -779,6 +1024,10 @@ function capture() {
   }
 
 
+  /*
+   * Canvas初期化
+   */
+
   ctx.clearRect(
     0,
     0,
@@ -788,7 +1037,7 @@ function capture() {
 
 
   /*
-   * 背景
+   * カメラ映像
    */
 
   ctx.drawImage(
@@ -796,18 +1045,22 @@ function capture() {
 
     sourceX,
     sourceY,
+
     sourceWidth,
     sourceHeight,
 
     0,
     0,
+
     canvas.width,
     canvas.height
   );
 
 
   /*
-   * キャラクター
+   * ブラウザ座標
+   * ↓
+   * Canvas座標
    */
 
   const scaleX =
@@ -819,6 +1072,10 @@ function capture() {
     canvas.height /
     areaRect.height;
 
+
+  /*
+   * キャラクター
+   */
 
   ctx.drawImage(
     character,
@@ -844,7 +1101,7 @@ function capture() {
 
 
   /*
-   * 保存
+   * 保存データ生成
    */
 
   canvas.toBlob(
@@ -889,6 +1146,10 @@ function capture() {
   );
 
 
+  /*
+   * 結果画面
+   */
+
   arScreen.classList.add(
     "hidden"
   );
@@ -902,7 +1163,7 @@ function capture() {
 
 
 /* ========================================
-   撮り直し
+   撮り直す
 ======================================== */
 
 backButton.addEventListener(
@@ -928,10 +1189,7 @@ backButton.addEventListener(
 
 
 /* ========================================
-   画面サイズ・回転変更
-
-   アドレスバーの開閉も
-   resizeで再計算される
+   サイズ変更
 ======================================== */
 
 window.addEventListener(
@@ -952,12 +1210,20 @@ window.addEventListener(
 );
 
 
+/* ========================================
+   画面回転
+======================================== */
+
 window.addEventListener(
   "orientationchange",
   () => {
 
     setTimeout(
-      fitCameraFrame,
+      () => {
+
+        fitCameraFrame();
+
+      },
       300
     );
 
