@@ -2,29 +2,43 @@
 <html lang="ja">
 
 <head>
+
   <meta charset="UTF-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    content="
+      width=device-width,
+      initial-scale=1.0,
+      maximum-scale=1.0,
+      user-scalable=no
+    ">
 
   <title>学校AR</title>
 
-  <link rel="stylesheet" href="./style.css">
+  <link
+    rel="stylesheet"
+    href="./style.css">
+
 </head>
+
 
 <body>
 
-  <!-- =========================
+
+  <!-- ==================================
        スタート画面
-  ========================== -->
+  =================================== -->
 
   <div id="startScreen">
 
-    <h1>学校AR</h1>
+    <h1>
+      学校AR
+    </h1>
 
     <p>
-      カメラを起動して、キャラクターと一緒に撮影できます。
+      カメラを起動して、
+      キャラクターと一緒に撮影できます。
     </p>
 
     <button id="startButton">
@@ -36,16 +50,25 @@
   </div>
 
 
-  <!-- =========================
-       ARカメラ画面
-  ========================== -->
 
-  <div id="arScreen" class="hidden">
+  <!-- ==================================
+       ARカメラ画面
+  =================================== -->
+
+  <div
+    id="arScreen"
+    class="hidden">
+
+
+    <!-- カメラ領域 -->
 
     <div id="cameraWrapper">
 
-      <!-- 撮影範囲 -->
+
+      <!-- 実際に撮影される範囲 -->
+
       <div id="cameraArea">
+
 
         <video
           id="camera"
@@ -53,25 +76,60 @@
           playsinline>
         </video>
 
+
+        <!-- キャラクター -->
+
         <img
           id="character"
           src="./images/sample.png"
           alt="キャラクター"
           draggable="false">
 
+
+        <!-- カメラズーム -->
+
+        <div
+          id="zoomControl"
+          class="hidden">
+
+          <span class="zoomLabel">
+            －
+          </span>
+
+          <input
+            id="zoomSlider"
+            type="range"
+            min="1"
+            max="1"
+            step="0.1"
+            value="1">
+
+          <span class="zoomLabel">
+            ＋
+          </span>
+
+        </div>
+
+
       </div>
 
     </div>
 
 
-    <!-- カメラアプリ風コントロール -->
+
+    <!-- ==================================
+         カメラ操作
+    =================================== -->
+
     <div id="cameraControls">
 
-      <!-- 左：リセット -->
+
+      <!-- リセット -->
+
       <button
         id="resetButton"
         class="sideButton"
-        aria-label="位置をリセット">
+        aria-label="キャラクター位置をリセット">
 
         <span class="controlIcon">
           ↺
@@ -84,17 +142,22 @@
       </button>
 
 
-      <!-- 中央：シャッター -->
+
+      <!-- シャッター -->
+
       <button
         id="captureButton"
         aria-label="撮影">
 
-        <span id="shutterInner"></span>
+        <span id="shutterInner">
+        </span>
 
       </button>
 
 
-      <!-- 右：カメラ切替 -->
+
+      <!-- カメラ切替 -->
+
       <button
         id="switchCameraButton"
         class="sideButton"
@@ -110,22 +173,30 @@
 
       </button>
 
+
     </div>
 
   </div>
 
 
-  <!-- =========================
-       撮影結果
-  ========================== -->
 
-  <div id="resultScreen" class="hidden">
+  <!-- ==================================
+       撮影結果
+  =================================== -->
+
+  <div
+    id="resultScreen"
+    class="hidden">
+
 
     <div id="resultImageArea">
 
-      <canvas id="captureCanvas"></canvas>
+      <canvas id="captureCanvas">
+      </canvas>
 
     </div>
+
+
 
     <div id="resultControls">
 
@@ -133,9 +204,10 @@
         撮り直す
       </button>
 
+
       <a
         id="downloadButton"
-        download="ar-photo.png">
+        download="ar-photo.jpg">
 
         写真を保存
 
@@ -143,10 +215,13 @@
 
     </div>
 
+
   </div>
 
 
+
   <script src="./app.js"></script>
+
 
 </body>
 
