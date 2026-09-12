@@ -1,110 +1,92 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0">
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <title>学校ARプラットフォーム</title>
+  <title>学校AR テスト</title>
 
-  <style>
-
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      text-align: center;
-      background: #111;
-      color: white;
-    }
-
-    video {
-      width: 100%;
-      max-width: 700px;
-      background: black;
-    }
-
-    button {
-      margin: 20px;
-      padding: 15px 30px;
-      font-size: 18px;
-    }
-
-  </style>
-
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <h1>学校AR カメラテスト</h1>
+  <div id="startScreen">
+    <h1>学校AR テスト</h1>
 
-  <button id="start">
-    カメラを起動
-  </button>
+    <p>
+      カメラを起動して、キャラクターと一緒に撮影できます。
+    </p>
 
-  <div>
-    <video
-      id="camera"
-      autoplay
-      playsinline>
-    </video>
+    <button id="startButton">
+      カメラを起動
+    </button>
+
+    <p id="status"></p>
   </div>
 
-  <p id="status">
-    カメラは起動していません
-  </p>
 
-<script>
+  <div id="arScreen" class="hidden">
 
-const button =
-  document.getElementById("start");
+    <div id="cameraArea">
 
-const video =
-  document.getElementById("camera");
+      <video
+        id="camera"
+        autoplay
+        playsinline>
+      </video>
 
-const status =
-  document.getElementById("status");
+      <img
+        id="character"
+        src="images/sample.png"
+        alt="キャラクター"
+        draggable="false">
 
-button.addEventListener(
-  "click",
-  async () => {
+    </div>
 
-    try {
 
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
+    <div id="controls">
 
-          video: {
-            facingMode: {
-              ideal: "environment"
-            }
-          },
+      <button id="resetButton">
+        位置をリセット
+      </button>
 
-          audio: false
+      <button id="captureButton">
+        📷 撮影
+      </button>
 
-        });
+    </div>
 
-      video.srcObject = stream;
+  </div>
 
-      status.textContent =
-        "カメラ起動成功";
 
-    } catch (error) {
+  <div id="resultScreen" class="hidden">
 
-      status.textContent =
-        "カメラ起動失敗：" +
-        error.name +
-        " / " +
-        error.message;
+    <h2>撮影結果</h2>
 
-    }
+    <canvas id="captureCanvas"></canvas>
 
-  }
-);
+    <div class="resultButtons">
 
-</script>
+      <button id="backButton">
+        撮り直す
+      </button>
+
+      <a
+        id="downloadButton"
+        download="ar-photo.png">
+        写真を保存
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <script src="app.js"></script>
 
 </body>
 </html>
