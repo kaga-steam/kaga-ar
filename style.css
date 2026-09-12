@@ -1,3 +1,7 @@
+/* ========================================
+   基本設定
+======================================== */
+
 html,
 body {
   margin: 0;
@@ -13,9 +17,9 @@ body {
 }
 
 
-/* =========================
+/* ========================================
    共通
-========================= */
+======================================== */
 
 .hidden {
   display: none !important;
@@ -27,6 +31,7 @@ button,
   border-radius: 999px;
 
   padding: 12px 20px;
+  margin: 0;
 
   font-size: 16px;
 
@@ -35,12 +40,14 @@ button,
 
   text-decoration: none;
   cursor: pointer;
+
+  box-sizing: border-box;
 }
 
 
-/* =========================
+/* ========================================
    スタート画面
-========================= */
+======================================== */
 
 #startScreen {
   min-height: 100dvh;
@@ -58,10 +65,18 @@ button,
   margin-top: 30px;
 }
 
+#startButton {
+  margin-top: 15px;
+}
 
-/* =========================
+#status {
+  margin-top: 15px;
+}
+
+
+/* ========================================
    AR画面
-========================= */
+======================================== */
 
 #arScreen {
   position: fixed;
@@ -76,7 +91,9 @@ button,
 }
 
 
-/* カメラ領域 */
+/* ========================================
+   カメラ領域
+======================================== */
 
 #cameraArea {
   position: absolute;
@@ -86,10 +103,14 @@ button,
   height: 100%;
 
   overflow: hidden;
+
+  background: black;
 }
 
 
-/* カメラ */
+/* ========================================
+   カメラ映像
+======================================== */
 
 #camera {
   position: absolute;
@@ -102,7 +123,9 @@ button,
 }
 
 
-/* キャラクター */
+/* ========================================
+   キャラクター
+======================================== */
 
 #character {
   position: absolute;
@@ -111,6 +134,7 @@ button,
   top: 50%;
 
   width: 180px;
+  height: auto;
 
   transform:
     translate(-50%, -50%)
@@ -129,7 +153,9 @@ button,
 }
 
 
-/* AR操作ボタン */
+/* ========================================
+   AR操作ボタン
+======================================== */
 
 #controls {
   position: absolute;
@@ -141,12 +167,14 @@ button,
   z-index: 20;
 
   display: flex;
+
   justify-content: center;
   align-items: center;
+
   gap: 10px;
 
   padding:
-    12px
+    20px
     12px
     calc(12px + env(safe-area-inset-bottom));
 
@@ -161,54 +189,92 @@ button,
 
 #captureButton {
   padding: 15px 24px;
+
   font-size: 19px;
 }
 
 
-/* =========================
+/* ========================================
    撮影結果画面
-========================= */
+======================================== */
 
 #resultScreen {
+  position: fixed;
+  inset: 0;
+
   width: 100%;
-  min-height: 100dvh;
+  height: 100dvh;
 
   box-sizing: border-box;
 
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  padding:
+    8px
+    10px
+    calc(8px + env(safe-area-inset-bottom));
 
   background: #111;
 
-  padding:
-    10px
-    10px
-    calc(20px + env(safe-area-inset-bottom));
-
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
+
+
+/*
+   hiddenを必ず優先
+*/
+
+#resultScreen.hidden {
+  display: none !important;
+}
+
+
+/* ========================================
+   撮影結果タイトル
+======================================== */
 
 #resultScreen h2 {
-  margin: 5px 0 10px;
+  flex: 0 0 auto;
+
+  margin: 3px 0 7px;
 
   font-size: 18px;
+
+  line-height: 1.2;
 }
 
 
-/* 撮影画像 */
+/* ========================================
+   撮影結果画像
+======================================== */
 
 #captureCanvas {
   display: block;
 
+  /*
+     flexで残った領域を使用
+  */
+  flex: 1 1 auto;
+
+  /*
+     flex要素が画面を
+     はみ出さないために重要
+  */
+  min-width: 0;
+  min-height: 0;
+
+  /*
+     Canvas本来のサイズではなく
+     表示領域に収める
+  */
   width: auto;
   height: auto;
 
   max-width: 100%;
-
-  /*
-   * ボタン表示領域を残す
-   */
-  max-height: calc(100dvh - 130px);
+  max-height: calc(100dvh - 100px);
 
   margin: 0 auto;
 
@@ -216,87 +282,253 @@ button,
 }
 
 
-/* 撮影結果ボタン */
+/* ========================================
+   撮影結果ボタン
+======================================== */
 
 .resultButtons {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-height: 55px;
+
   display: flex;
 
   justify-content: center;
   align-items: center;
 
-  flex-wrap: wrap;
-
   gap: 8px;
-
-  width: 100%;
 
   box-sizing: border-box;
 
-  padding: 10px 0;
+  padding: 6px 0 2px;
+}
+
+.resultButtons button,
+.resultButtons a {
+  flex: 0 0 auto;
+
+  padding: 10px 18px;
+
+  font-size: 15px;
+
+  white-space: nowrap;
 }
 
 
-/* =========================
-   スマホ横向き
-========================= */
+/* ========================================
+   スマートフォン
+======================================== */
 
-@media (orientation: landscape) {
+@media (max-width: 767px) {
+
+  /*
+     スタート画面
+  */
+
+  #startScreen {
+    padding: 25px 15px;
+  }
+
+  #startScreen h1 {
+    margin-top: 20px;
+
+    font-size: 24px;
+  }
+
+
+  /*
+     キャラクター初期サイズ
+  */
+
+  #character {
+    width: 150px;
+  }
+
+
+  /*
+     AR操作ボタン
+  */
 
   #controls {
     padding:
-      5px
-      10px
-      calc(5px + env(safe-area-inset-bottom));
+      18px
+      8px
+      calc(8px + env(safe-area-inset-bottom));
+
+    gap: 6px;
   }
 
   #controls button {
-    padding: 8px 15px;
+    padding: 10px 15px;
 
     font-size: 14px;
   }
 
   #captureButton {
-    padding: 9px 18px;
+    padding: 12px 20px;
 
-    font-size: 16px;
+    font-size: 17px;
   }
 
+
+  /*
+     撮影結果
+  */
 
   #resultScreen {
-    padding: 4px 8px 8px;
+    height: 100dvh;
 
-    min-height: 100dvh;
+    padding:
+      4px
+      6px
+      calc(5px + env(safe-area-inset-bottom));
   }
 
+
+  /*
+     スマホではタイトルを非表示。
+     写真領域をできるだけ確保する。
+  */
 
   #resultScreen h2 {
     display: none;
   }
 
 
-  #captureCanvas {
-    max-width: 100%;
+  /*
+     ボタン用の領域を残して
+     Canvasを画面内に収める
+  */
 
-    /*
-     * 横画面なので下に
-     * 約60pxボタン領域を確保
-     */
+  #captureCanvas {
+    flex: 1 1 0;
+
+    min-height: 0;
+
+    width: auto;
+    height: auto;
+
+    max-width: 100%;
     max-height: calc(100dvh - 65px);
+
+    object-fit: contain;
+  }
+
+
+  /*
+     撮影結果ボタン
+  */
+
+  .resultButtons {
+    flex: 0 0 58px;
+
+    min-height: 58px;
+
+    padding: 4px 0;
+
+    gap: 6px;
+  }
+
+  .resultButtons button,
+  .resultButtons a {
+    padding: 9px 15px;
+
+    font-size: 14px;
+  }
+
+}
+
+
+/* ========================================
+   スマートフォン横向き
+======================================== */
+
+@media
+  (max-width: 900px)
+  and (orientation: landscape) {
+
+  /*
+     AR操作ボタンを小さくする
+  */
+
+  #controls {
+    padding:
+      10px
+      8px
+      calc(5px + env(safe-area-inset-bottom));
+
+    gap: 6px;
+  }
+
+  #controls button {
+    padding: 7px 13px;
+
+    font-size: 13px;
+  }
+
+  #captureButton {
+    padding: 8px 17px;
+
+    font-size: 15px;
+  }
+
+
+  /*
+     キャラクター
+  */
+
+  #character {
+    width: 130px;
+  }
+
+
+  /*
+     撮影結果
+  */
+
+  #resultScreen {
+    padding:
+      2px
+      5px
+      calc(3px + env(safe-area-inset-bottom));
+  }
+
+  #resultScreen h2 {
+    display: none;
+  }
+
+
+  /*
+     横画面は高さが少ないので
+     ボタン領域を約48px確保
+  */
+
+  #captureCanvas {
+    flex: 1 1 0;
+
+    min-height: 0;
+
+    max-width: 100%;
+    max-height: calc(100dvh - 52px);
+
+    object-fit: contain;
   }
 
 
   .resultButtons {
-    padding: 4px 0;
+    flex: 0 0 48px;
 
-    min-height: 55px;
+    min-height: 48px;
+
+    padding: 2px 0;
   }
-
 
   .resultButtons button,
   .resultButtons a {
-    padding: 8px 15px;
+    padding: 7px 13px;
 
-    font-size: 14px;
+    font-size: 13px;
   }
 
 }
