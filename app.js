@@ -44,9 +44,9 @@ const ctx =
 let stream = null;
 
 
-/*
- * キャラクター位置
- */
+/* =========================
+   キャラクター設定
+========================= */
 
 let characterX = 0;
 let characterY = 0;
@@ -54,18 +54,18 @@ let characterY = 0;
 let scale = 1;
 
 
-/*
- * ポインター管理
- */
+/* =========================
+   タッチ操作管理
+========================= */
 
 const pointers = new Map();
 
 let previousDistance = null;
 
 
-/*
- * カメラ起動
- */
+/* =========================
+   カメラ起動
+========================= */
 
 startButton.addEventListener(
   "click",
@@ -99,8 +99,7 @@ startButton.addEventListener(
 
       resetCharacter();
 
-    }
-    catch (error) {
+    } catch (error) {
 
       status.textContent =
         "カメラ起動失敗：" +
@@ -108,15 +107,17 @@ startButton.addEventListener(
         " / " +
         error.message;
 
+      console.error(error);
+
     }
 
   }
 );
 
 
-/*
- * キャラクター表示更新
- */
+/* =========================
+   キャラクター位置更新
+========================= */
 
 function updateCharacterTransform() {
 
@@ -130,9 +131,9 @@ function updateCharacterTransform() {
 }
 
 
-/*
- * 初期位置
- */
+/* =========================
+   キャラクター初期位置
+========================= */
 
 function resetCharacter() {
 
@@ -152,11 +153,9 @@ resetButton.addEventListener(
 );
 
 
-/*
- * Pointer Events
- *
- * マウス・タッチ・ペンを共通処理
- */
+/* =========================
+   Pointer Events
+========================= */
 
 character.addEventListener(
   "pointerdown",
@@ -180,6 +179,8 @@ character.addEventListener(
 
 
 function pointerDown(event) {
+
+  event.preventDefault();
 
   character.setPointerCapture(
     event.pointerId
@@ -222,10 +223,7 @@ function pointerMove(event) {
   );
 
 
-  /*
-   * 1本指
-   * 移動
-   */
+  /* 1本指：移動 */
 
   if (
     pointers.size === 1
@@ -247,10 +245,7 @@ function pointerMove(event) {
   }
 
 
-  /*
-   * 2本指
-   * ピンチ拡大縮小
-   */
+  /* 2本指：ピンチ拡大縮小 */
 
   if (
     pointers.size === 2
@@ -272,16 +267,14 @@ function pointerMove(event) {
       previousDistance !== null
     ) {
 
-      const difference =
+      const ratio =
         distance /
         previousDistance;
 
-      scale *= difference;
+      scale *= ratio;
 
 
-      /*
-       * サイズ制限
-       */
+      /* サイズ制限 */
 
       scale =
         Math.max(
@@ -316,15 +309,17 @@ function pointerUp(event) {
   if (
     pointers.size < 2
   ) {
+
     previousDistance = null;
+
   }
 
 }
 
 
-/*
- * 2点間距離
- */
+/* =========================
+   2点間距離
+========================= */
 
 function getDistance(
   pointA,
@@ -348,9 +343,9 @@ function getDistance(
 }
 
 
-/*
- * 撮影
- */
+/* =========================
+   撮影
+========================= */
 
 captureButton.addEventListener(
   "click",
@@ -359,11 +354,6 @@ captureButton.addEventListener(
 
 
 function capture() {
-
-  /*
-   * カメラ映像そのものの
-   * 解像度を取得
-   */
 
   const videoWidth =
     video.videoWidth;
@@ -382,18 +372,13 @@ function capture() {
     );
 
     return;
+
   }
 
 
-  canvas.width =
-    videoWidth;
-
-  canvas.height =
-    videoHeight;
-
-
   /*
-   * cameraArea上の表示領域
+   * 実際に画面で見えている
+   * カメラ領域
    */
 
   const areaRect =
@@ -404,8 +389,30 @@ function capture() {
 
 
   /*
-   * object-fit: cover のため、
-   * 表示されている映像範囲を計算
+   * 撮影画像は、
+   * 画面で見えている縦横比にする
+   */
+
+  const outputWidth = 1080;
+
+  const outputHeight =
+    Math.round(
+      outputWidth *
+      areaRect.height /
+      areaRect.width
+    );
+
+
+  canvas.width =
+    outputWidth;
+
+  canvas.height =
+    outputHeight;
+
+
+  /*
+   * object-fit: cover に合わせて
+   * カメラ映像の切り取り範囲を計算
    */
 
   const videoAspect =
@@ -433,7 +440,8 @@ function capture() {
   ) {
 
     /*
-     * 横方向を切り取る
+     * カメラ映像の方が横長
+     * → 左右を切り取る
      */
 
     sourceWidth =
@@ -446,11 +454,11 @@ function capture() {
         sourceWidth
       ) / 2;
 
-  }
-  else {
+  } else {
 
     /*
-     * 縦方向を切り取る
+     * カメラ映像の方が縦長
+     * → 上下を切り取る
      */
 
     sourceHeight =
@@ -467,8 +475,16 @@ function capture() {
 
 
   /*
-   * カメラ映像をCanvasへ描画
+   * カメラ映像を描画
    */
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
 
   ctx.drawImage(
     video,
@@ -488,15 +504,15 @@ function capture() {
 
 
   /*
-   * ブラウザ画面上の座標を
-   * Canvas座標に変換
+   * ブラウザ上の位置を
+   * Canvas座標へ変換
    */
 
-  const scaleX =
+  const canvasScaleX =
     canvas.width /
     areaRect.width;
 
-  const scaleY =
+  const canvasScaleY =
     canvas.height /
     areaRect.height;
 
@@ -506,27 +522,27 @@ function capture() {
       charRect.left -
       areaRect.left
     ) *
-    scaleX;
+    canvasScaleX;
 
   const characterCanvasY =
     (
       charRect.top -
       areaRect.top
     ) *
-    scaleY;
+    canvasScaleY;
 
 
   const characterCanvasWidth =
     charRect.width *
-    scaleX;
+    canvasScaleX;
 
   const characterCanvasHeight =
     charRect.height *
-    scaleY;
+    canvasScaleY;
 
 
   /*
-   * キャラクター描画
+   * キャラクターを描画
    */
 
   ctx.drawImage(
@@ -541,7 +557,7 @@ function capture() {
 
 
   /*
-   * 結果画面へ
+   * 撮影結果画面へ
    */
 
   arScreen.classList.add(
@@ -554,7 +570,7 @@ function capture() {
 
 
   /*
-   * 保存画像生成
+   * 保存用画像を生成
    */
 
   canvas.toBlob(
@@ -564,24 +580,41 @@ function capture() {
         return;
       }
 
+
+      if (
+        downloadButton.dataset.url
+      ) {
+
+        URL.revokeObjectURL(
+          downloadButton.dataset.url
+        );
+
+      }
+
+
       const url =
         URL.createObjectURL(
           blob
         );
 
+
       downloadButton.href =
         url;
 
+      downloadButton.dataset.url =
+        url;
+
     },
+
     "image/png"
   );
 
 }
 
 
-/*
- * 撮り直し
- */
+/* =========================
+   撮り直し
+========================= */
 
 backButton.addEventListener(
   "click",
@@ -593,6 +626,27 @@ backButton.addEventListener(
 
     arScreen.classList.remove(
       "hidden"
+    );
+
+  }
+);
+
+
+/* =========================
+   画面回転時
+========================= */
+
+window.addEventListener(
+  "orientationchange",
+  () => {
+
+    setTimeout(
+      () => {
+
+        updateCharacterTransform();
+
+      },
+      300
     );
 
   }
