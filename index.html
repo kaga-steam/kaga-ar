@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>学校ARプラットフォーム</title>
+
+  <style>
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      text-align: center;
+      background: #111;
+      color: white;
+    }
+
+    video {
+      width: 100%;
+      max-width: 700px;
+      background: black;
+    }
+
+    button {
+      margin: 20px;
+      padding: 15px 30px;
+      font-size: 18px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h1>学校AR カメラテスト</h1>
+
+  <button id="start">
+    カメラを起動
+  </button>
+
+  <div>
+    <video
+      id="camera"
+      autoplay
+      playsinline>
+    </video>
+  </div>
+
+  <p id="status">
+    カメラは起動していません
+  </p>
+
+<script>
+
+const button =
+  document.getElementById("start");
+
+const video =
+  document.getElementById("camera");
+
+const status =
+  document.getElementById("status");
+
+button.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+
+          video: {
+            facingMode: {
+              ideal: "environment"
+            }
+          },
+
+          audio: false
+
+        });
+
+      video.srcObject = stream;
+
+      status.textContent =
+        "カメラ起動成功";
+
+    } catch (error) {
+
+      status.textContent =
+        "カメラ起動失敗：" +
+        error.name +
+        " / " +
+        error.message;
+
+    }
+
+  }
+);
+
+</script>
+
+</body>
+</html>
