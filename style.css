@@ -12,53 +12,30 @@ body {
   color: white;
 
   overflow: hidden;
-
-  touch-action: none;
-}
-
-
-/* 最初の画面 */
-
-#startScreen {
-  text-align: center;
-  padding: 30px 20px;
-}
-
-#startScreen h1 {
-  margin-top: 30px;
-}
-
-button,
-#downloadButton {
-  border: none;
-  border-radius: 8px;
-
-  padding: 14px 22px;
-  margin: 8px;
-
-  font-size: 18px;
-
-  cursor: pointer;
-
-  background: white;
-  color: #222;
-
-  text-decoration: none;
 }
 
 
 /* AR画面 */
 
 #arScreen {
+  position: fixed;
+  inset: 0;
+
   width: 100%;
-  height: 100%;
+  height: 100dvh;
+
+  overflow: hidden;
 }
 
+
+/* カメラ領域 */
+
 #cameraArea {
-  position: relative;
+  position: absolute;
+  inset: 0;
 
   width: 100%;
-  height: calc(100% - 80px);
+  height: 100%;
 
   overflow: hidden;
 
@@ -71,8 +48,7 @@ button,
 #camera {
   position: absolute;
 
-  top: 0;
-  left: 0;
+  inset: 0;
 
   width: 100%;
   height: 100%;
@@ -95,60 +71,69 @@ button,
     translate(-50%, -50%)
     scale(1);
 
-  transform-origin: center center;
+  transform-origin: center;
 
   user-select: none;
   -webkit-user-select: none;
 
   touch-action: none;
 
-  cursor: grab;
-
   z-index: 10;
 }
 
 
-/* ボタン */
+/* 操作ボタンをカメラの上に重ねる */
 
 #controls {
-  height: 80px;
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 20;
 
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 10px;
 
-  background: #222;
+  padding:
+    12px
+    12px
+    calc(12px + env(safe-area-inset-bottom));
+
+  background:
+    linear-gradient(
+      transparent,
+      rgba(0, 0, 0, 0.7)
+    );
 }
 
 
-/* 撮影結果 */
+button,
+#downloadButton {
+  border: none;
+  border-radius: 999px;
 
-#resultScreen {
-  width: 100%;
-  height: 100%;
+  padding: 13px 20px;
 
-  text-align: center;
+  font-size: 16px;
 
-  overflow: auto;
-}
+  background: white;
+  color: #222;
 
-#captureCanvas {
-  display: block;
-
-  max-width: 95%;
-  max-height: 75vh;
-
-  margin: 10px auto;
-
-  background: black;
-}
-
-.resultButtons {
-  margin-bottom: 30px;
+  text-decoration: none;
 }
 
 
-/* 非表示 */
+/* 撮影ボタンを少し大きく */
+
+#captureButton {
+  font-size: 20px;
+  padding: 15px 24px;
+}
+
 
 .hidden {
   display: none !important;
