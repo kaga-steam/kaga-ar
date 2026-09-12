@@ -1,5 +1,5 @@
 /* ========================================
-   基本設定
+   基本
 ======================================== */
 
 * {
@@ -73,13 +73,13 @@ a {
 #startScreen p {
   max-width: 500px;
 
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 #startButton {
   margin-top: 15px;
 
-  border: none;
+  border: 0;
   border-radius: 999px;
 
   padding: 14px 30px;
@@ -123,7 +123,7 @@ a {
 
 
 /* ========================================
-   撮影フレーム配置領域
+   カメラ領域を置く場所
 ======================================== */
 
 #cameraWrapper {
@@ -137,7 +137,7 @@ a {
   justify-content: center;
   align-items: center;
 
-  padding: 6px;
+  padding: 4px;
 
   background: #000;
 
@@ -146,24 +146,18 @@ a {
 
 
 /* ========================================
-   撮影範囲
-   縦画面：3:4
+   実際の撮影範囲
+
+   サイズはapp.js側で決める
 ======================================== */
 
 #cameraArea {
   position: relative;
 
-  aspect-ratio: 3 / 4;
+  flex: none;
 
-  /*
-   * 縦画面では横幅基準。
-   * ただし高さを超えないようにする。
-   */
-  width: 100%;
-  height: auto;
-
-  max-width: 100%;
-  max-height: 100%;
+  width: 0;
+  height: 0;
 
   overflow: hidden;
 
@@ -219,15 +213,15 @@ a {
 
 
 /* ========================================
-   カメラ操作バー
+   カメラ操作部
+   縦画面では下
 ======================================== */
 
 #cameraControls {
-  flex: 0 0 auto;
+  flex: 0 0 105px;
 
   width: 100%;
-
-  min-height: 105px;
+  height: 105px;
 
   display: grid;
 
@@ -239,20 +233,20 @@ a {
   align-items: center;
 
   padding:
-    10px
+    8px
     18px
-    calc(10px + env(safe-area-inset-bottom));
+    calc(8px + env(safe-area-inset-bottom));
 
   background: #000;
 }
 
 
 /* ========================================
-   左右ボタン
+   左右操作
 ======================================== */
 
 .sideButton {
-  border: none;
+  border: 0;
 
   background: transparent;
   color: #fff;
@@ -281,7 +275,7 @@ a {
 
   background: rgba(255, 255, 255, 0.15);
 
-  font-size: 24px;
+  font-size: 23px;
 }
 
 .controlLabel {
@@ -292,7 +286,7 @@ a {
 
 
 /* ========================================
-   シャッターボタン
+   シャッター
 ======================================== */
 
 #captureButton {
@@ -308,12 +302,12 @@ a {
 
   background: transparent;
 
-  cursor: pointer;
-
   display: flex;
 
   justify-content: center;
   align-items: center;
+
+  cursor: pointer;
 }
 
 #shutterInner {
@@ -334,7 +328,7 @@ a {
 
 
 /* ========================================
-   撮影結果画面
+   撮影結果
 ======================================== */
 
 #resultScreen {
@@ -358,7 +352,7 @@ a {
 
 
 /* ========================================
-   撮影結果画像領域
+   撮影結果画像
 ======================================== */
 
 #resultImageArea {
@@ -372,7 +366,9 @@ a {
   justify-content: center;
   align-items: center;
 
-  padding: 6px;
+  padding: 4px;
+
+  background: #000;
 
   overflow: hidden;
 }
@@ -386,20 +382,19 @@ a {
   max-width: 100%;
   max-height: 100%;
 
-  object-fit: contain;
-
   background: #000;
 }
 
 
 /* ========================================
-   撮影結果操作バー
+   撮影結果ボタン
 ======================================== */
 
 #resultControls {
   flex: 0 0 80px;
 
   width: 100%;
+  height: 80px;
 
   display: flex;
 
@@ -409,9 +404,9 @@ a {
   gap: 15px;
 
   padding:
-    10px
+    8px
     12px
-    calc(10px + env(safe-area-inset-bottom));
+    calc(8px + env(safe-area-inset-bottom));
 
   background: #000;
 }
@@ -420,7 +415,7 @@ a {
 #resultControls a {
   min-width: 120px;
 
-  border: none;
+  border: 0;
   border-radius: 999px;
 
   padding: 11px 18px;
@@ -446,8 +441,7 @@ a {
 
 
 /* ========================================
-   スマホ横向き
-   撮影範囲：4:3
+   横向き
 ======================================== */
 
 @media (orientation: landscape) {
@@ -457,52 +451,15 @@ a {
   }
 
 
-  #cameraWrapper {
-    flex: 1 1 auto;
-
-    min-width: 0;
-    min-height: 0;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    padding: 4px;
-  }
-
-
   /*
-   * 横向きでは高さを基準にして
-   * 4:3を維持
-   */
-
-  #cameraArea {
-    position: relative;
-
-    aspect-ratio: 4 / 3;
-
-    height: 100%;
-    width: auto;
-
-    max-width: 100%;
-    max-height: 100%;
-
-    overflow: hidden;
-  }
-
-
-  /*
-   * 操作バーを右側に配置
-   */
+     右側に操作部
+  */
 
   #cameraControls {
     flex: 0 0 105px;
 
     width: 105px;
-    min-height: 0;
-
-    display: grid;
+    height: 100%;
 
     grid-template-columns: 1fr;
 
@@ -519,10 +476,6 @@ a {
   }
 
 
-  /*
-   * 横向きでは少し小さく
-   */
-
   #captureButton {
     width: 68px;
     height: 68px;
@@ -538,7 +491,7 @@ a {
     width: 36px;
     height: 36px;
 
-    font-size: 21px;
+    font-size: 20px;
   }
 
   .controlLabel {
@@ -551,39 +504,12 @@ a {
   }
 
 
-  /* ======================================
-     撮影結果
-  ====================================== */
+  /* 撮影結果 */
 
   #resultScreen {
     flex-direction: row;
   }
 
-
-  #resultImageArea {
-    flex: 1 1 auto;
-
-    min-width: 0;
-    min-height: 0;
-
-    padding: 4px;
-  }
-
-
-  #captureCanvas {
-    width: auto;
-    height: auto;
-
-    max-width: 100%;
-    max-height: 100%;
-
-    object-fit: contain;
-  }
-
-
-  /*
-   * 結果操作バーも右側へ
-   */
 
   #resultControls {
     flex: 0 0 125px;
@@ -618,23 +544,18 @@ a {
 
 
 /* ========================================
-   PC・大画面
+   PC
 ======================================== */
 
 @media (min-width: 900px) {
 
   #cameraWrapper {
-    padding: 12px;
+    padding: 10px;
   }
 
 
   #character {
     width: 190px;
-  }
-
-
-  #cameraControls {
-    min-height: 115px;
   }
 
 }
