@@ -54,11 +54,6 @@ const ctx =
 
 let stream = null;
 
-/*
- * environment = 背面
- * user = 前面
- */
-
 let facingMode = "environment";
 
 
@@ -68,12 +63,11 @@ let facingMode = "environment";
 
 let characterX = 0;
 let characterY = 0;
-
 let characterScale = 1;
 
 
 /* ========================================
-   Pointer管理
+   Pointer
 ======================================== */
 
 const pointers = new Map();
@@ -129,12 +123,15 @@ startButton.addEventListener(
 
 async function startCamera() {
 
-  /*
-   * 既存ストリーム停止
-   */
-
   stopCamera();
 
+
+  /*
+   * スマホカメラで4:3を優先
+   *
+   * exact にすると対応していない端末で
+   * エラーになる可能性があるため ideal。
+   */
 
   const constraints = {
 
@@ -144,9 +141,9 @@ async function startCamera() {
         ideal: facingMode
       },
 
-      /*
-       * 可能なら高めの解像度
-       */
+      aspectRatio: {
+        ideal: 4 / 3
+      },
 
       width: {
         ideal: 1920
@@ -175,6 +172,24 @@ async function startCamera() {
 
   await video.play();
 
+
+  /*
+   * 実際にブラウザが選択した
+   * カメラ解像度を確認
+   */
+
+  const track =
+    stream.getVideoTracks()[0];
+
+  const settings =
+    track.getSettings();
+
+
+  console.log(
+    "Camera settings:",
+    settings
+  );
+
 }
 
 
@@ -202,12 +217,16 @@ function stopCamera() {
 
 
 /* ========================================
-   前面・背面カメラ切替
+   前面・背面切替
 ======================================== */
 
 switchCameraButton.addEventListener(
   "click",
   async () => {
+
+    const oldFacingMode =
+      facingMode;
+
 
     facingMode =
       facingMode === "environment"
@@ -224,15 +243,13 @@ switchCameraButton.addEventListener(
 
       console.error(error);
 
+
       /*
-       * 切替できなかった場合は
-       * 元に戻す
+       * 切替失敗時は元へ戻す
        */
 
       facingMode =
-        facingMode === "environment"
-          ? "user"
-          : "environment";
+        oldFacingMode;
 
 
       try {
@@ -255,7 +272,7 @@ switchCameraButton.addEventListener(
 
 
 /* ========================================
-   キャラクター表示更新
+   キャラクター更新
 ======================================== */
 
 function updateCharacterTransform() {
@@ -347,11 +364,6 @@ function pointerDown(event) {
   );
 
 
-  /*
-   * 2本指になった瞬間の
-   * 初期距離を取得
-   */
-
   if (
     pointers.size === 2
   ) {
@@ -408,7 +420,7 @@ function pointerMove(event) {
 
   /*
    * 1本指
-   * ドラッグ
+   * 移動
    */
 
   if (
@@ -435,7 +447,7 @@ function pointerMove(event) {
 
   /*
    * 2本指
-   * ピンチ拡大縮小
+   * 拡大縮小
    */
 
   if (
@@ -468,11 +480,6 @@ function pointerMove(event) {
       characterScale *=
         ratio;
 
-
-      /*
-       * 最小30%
-       * 最大400%
-       */
 
       characterScale =
         Math.max(
@@ -521,7 +528,7 @@ function pointerUp(event) {
 
 
 /* ========================================
-   2点間距離
+   距離
 ======================================== */
 
 function getDistance(
@@ -529,18 +536,14 @@ function getDistance(
   pointB
 ) {
 
-  const dx =
-    pointA.x -
-    pointB.x;
-
-  const dy =
-    pointA.y -
-    pointB.y;
-
-
   return Math.hypot(
-    dx,
-    dy
+
+    pointA.x -
+      pointB.x,
+
+    pointA.y -
+      pointB.y
+
   );
 
 }
@@ -580,7 +583,8 @@ function capture() {
 
 
   /*
-   * 画面上の撮影領域
+   * 現在画面上に表示されている
+   * 撮影フレーム
    */
 
   const areaRect =
@@ -591,56 +595,73 @@ function capture() {
 
 
   /*
-   * 撮影結果は
-   * cameraAreaと完全に同じ比率
-   */
-
-  const isPortrait =
-    areaRect.height >=
-    areaRect.width;
-
-
-  /*
-   * 縦：
-   * 1080 × 1440
+   * ★重要
    *
-   * 横：
-   * 1440 × 1080
+   * 1080×1440などに固定しない。
+   *
+   * cameraAreaと完全に同じ
+   * 縦横比でCanvasを作る。
    */
 
-  if (isPortrait) {
 
-    canvas.width =
-      1080;
+  const areaAspect =
+    areaRect.width /
+    areaRect.height;
+
+
+  const longSide = 1440;
+
+
+  if (
+    areaRect.height >=
+    areaRect.width
+  ) {
+
+    /*
+     * 縦画面
+     */
 
     canvas.height =
-      1440;
+      longSide;
+
+    canvas.width =
+      Math.round(
+        longSide *
+        areaAspect
+      );
 
   }
   else {
 
+    /*
+     * 横画面
+     */
+
     canvas.width =
-      1440;
+      longSide;
 
     canvas.height =
-      1080;
+      Math.round(
+        longSide /
+        areaAspect
+      );
 
   }
 
 
   /*
-   * カメラ映像の
-   * object-fit: cover 相当
+   * videoの実際の縦横比
    */
 
   const videoAspect =
     videoWidth /
     videoHeight;
 
-  const areaAspect =
-    areaRect.width /
-    areaRect.height;
 
+  /*
+   * object-fit: cover と
+   * 同じ範囲を計算
+   */
 
   let sourceX = 0;
   let sourceY = 0;
@@ -658,6 +679,8 @@ function capture() {
   ) {
 
     /*
+     * videoが撮影枠より横長
+     *
      * 左右を切り取る
      */
 
@@ -676,6 +699,8 @@ function capture() {
   else {
 
     /*
+     * videoが撮影枠より縦長
+     *
      * 上下を切り取る
      */
 
@@ -693,10 +718,6 @@ function capture() {
   }
 
 
-  /*
-   * Canvasクリア
-   */
-
   ctx.clearRect(
     0,
     0,
@@ -706,7 +727,7 @@ function capture() {
 
 
   /*
-   * カメラ映像描画
+   * カメラ画像
    */
 
   ctx.drawImage(
@@ -727,9 +748,7 @@ function capture() {
 
 
   /*
-   * ブラウザ座標
-   * ↓
-   * Canvas座標
+   * キャラクター座標変換
    */
 
   const canvasScaleX =
@@ -783,10 +802,11 @@ function capture() {
 
 
   /*
-   * 保存用URL生成
+   * 保存用Blob
    */
 
   canvas.toBlob(
+
     blob => {
 
       if (!blob) {
@@ -819,17 +839,21 @@ function capture() {
 
     },
 
-    "image/png"
+    "image/jpeg",
+
+    0.92
+
   );
 
 
   /*
-   * 撮影結果表示
+   * 結果画面
    */
 
   arScreen.classList.add(
     "hidden"
   );
+
 
   resultScreen.classList.remove(
     "hidden"
@@ -850,6 +874,7 @@ backButton.addEventListener(
       "hidden"
     );
 
+
     arScreen.classList.remove(
       "hidden"
     );
@@ -866,18 +891,13 @@ window.addEventListener(
   "orientationchange",
   () => {
 
-    /*
-     * 回転後にブラウザサイズが
-     * 確定するまで少し待つ
-     */
-
     setTimeout(
       () => {
 
         updateCharacterTransform();
 
       },
-      250
+      300
     );
 
   }
