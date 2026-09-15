@@ -1,21 +1,24 @@
 {
   "schoolId": "yamashiro",
   "schoolName": "山代小学校",
-  "projectName": "山代AR",
+  "projectName": "山代GO",
   "contents": [
     {
       "id": "Y001",
-      "place": "テスト場所1",
+      "place": "古総湯",
       "characters": [
         {
-          "name": "テストキャラクター",
+          "name": "ユゲッチ",
           "image": "images/sample.png",
-          "message": "こんにちは！",
+          "message": "山代温泉へようこそ！",
           "order": 1,
-          "effect": "none",
+          "entryEffect": "pop",
+          "idleEffect": "float",
           "x": 50,
           "y": 50,
-          "size": 100
+          "size": 100,
+          "delay": 0,
+          "duration": 700
         }
       ]
     }
