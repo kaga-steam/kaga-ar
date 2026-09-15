@@ -9,7 +9,7 @@
       "characters": [
         {
           "name": "テストキャラクター",
-          "image": "images/sample.png",
+          "image": "../../images/sample.png",
           "message": "こんにちは！",
           "order": 1,
           "effect": "none",
