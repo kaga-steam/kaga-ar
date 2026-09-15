@@ -70,13 +70,12 @@
         </video>
 
 
-        <!-- キャラクター -->
+        <!--
+          キャラクターは
+          app.jsでここへ自動生成
+        -->
 
-        <img
-          id="character"
-          src="./images/sample.png"
-          alt="キャラクター"
-          draggable="false">
+        <div id="characterLayer"></div>
 
 
         <!-- 擬似ズーム -->
@@ -116,8 +115,6 @@
     <div id="cameraControls">
 
 
-      <!-- リセット -->
-
       <button
         id="resetButton"
         class="sideButton"
@@ -134,8 +131,6 @@
       </button>
 
 
-      <!-- シャッター -->
-
       <button
         id="captureButton"
         aria-label="撮影">
@@ -144,8 +139,6 @@
 
       </button>
 
-
-      <!-- カメラ切替 -->
 
       <button
         id="switchCameraButton"
