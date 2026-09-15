@@ -102,6 +102,14 @@ let previousDistance =
 
 
 /* ========================================
+   演出タイマー
+======================================== */
+
+let entryTimer = null;
+let idleTimer = null;
+
+
+/* ========================================
    URLパラメータ取得
 ======================================== */
 
@@ -221,9 +229,6 @@ async function loadArData() {
     await fetch(
       dataUrl,
       {
-        /*
-         * 検証中はキャッシュを使わない
-         */
         cache: "no-store"
       }
     );
@@ -261,10 +266,6 @@ async function loadArData() {
   }
 
 
-  /*
-   * URLのidと一致するコンテンツ
-   */
-
   currentContent =
     schoolData.contents.find(
       item =>
@@ -288,10 +289,6 @@ async function loadArData() {
   );
 
 
-  /*
-   * 今回は1体目を使用
-   */
-
   if (
     !Array.isArray(
       currentContent.characters
@@ -306,6 +303,9 @@ async function loadArData() {
   }
 
 
+  /*
+   * 現段階では1体目だけ使用
+   */
   currentCharacter =
     currentContent.characters[0];
 
@@ -327,16 +327,6 @@ async function loadArData() {
   }
 
 
-  /*
-   * JSON
-   *
-   * "image": "images/sample.png"
-   *
-   * ↓
-   *
-   * ./schools/yamashiro/images/sample.png
-   */
-
   const imageUrl =
     `./schools/${encodeURIComponent(schoolId)}/${currentCharacter.image}`;
 
@@ -351,10 +341,6 @@ async function loadArData() {
     imageUrl;
 
 
-  /*
-   * 画像本体が読み込めるまで待つ
-   */
-
   await waitForImage(
     character
   );
@@ -363,36 +349,6 @@ async function loadArData() {
   console.log(
     "character image loaded"
   );
-
-
-  /*
-   * 初期サイズ
-   */
-
-  if (
-    currentCharacter.size !== undefined
-  ) {
-
-    const size =
-      Number(
-        currentCharacter.size
-      );
-
-
-    if (
-      Number.isFinite(size) &&
-      size > 0
-    ) {
-
-      characterScale =
-        size / 100;
-
-    }
-
-  }
-
-
-  updateCharacterTransform();
 
 
   arDataReady =
@@ -406,10 +362,6 @@ async function loadArData() {
 ======================================== */
 
 async function initializeApp() {
-
-  /*
-   * 読込完了するまで押せなくする
-   */
 
   startButton.disabled =
     true;
@@ -426,10 +378,6 @@ async function initializeApp() {
 
     await loadArData();
 
-
-    /*
-     * 読込成功
-     */
 
     status.textContent =
       `${schoolData.projectName || "学校AR"} / ${currentContent.place || contentId}`;
@@ -471,9 +419,6 @@ async function initializeApp() {
 
 /* ========================================
    撮影フレーム計算
-
-   縦：3:4
-   横：利用可能領域いっぱい
 ======================================== */
 
 function fitCameraFrame() {
@@ -523,10 +468,6 @@ function fitCameraFrame() {
       "(orientation: portrait)"
     ).matches;
 
-
-  /*
-   * 縦画面
-   */
 
   if (portrait) {
 
@@ -578,12 +519,6 @@ function fitCameraFrame() {
       `${Math.floor(frameHeight)}px`;
 
   }
-
-
-  /*
-   * 横画面
-   */
-
   else {
 
     cameraArea.style.width =
@@ -829,43 +764,314 @@ function updateCharacterTransform() {
 
 
 /* ========================================
+   演出クラス削除
+======================================== */
+
+function clearCharacterEffects() {
+
+  character.classList.remove(
+
+    "entry-fade",
+    "entry-pop",
+    "entry-from-left",
+    "entry-from-right",
+    "entry-from-bottom",
+    "entry-from-top",
+
+    "idle-float",
+    "idle-jump",
+    "idle-rotate",
+    "idle-sway"
+
+  );
+
+
+  character.style.animationDuration =
+    "";
+
+
+  character.style.animationTimingFunction =
+    "";
+
+
+  character.style.animationFillMode =
+    "";
+
+
+  if (entryTimer) {
+
+    clearTimeout(
+      entryTimer
+    );
+
+    entryTimer =
+      null;
+
+  }
+
+
+  if (idleTimer) {
+
+    clearTimeout(
+      idleTimer
+    );
+
+    idleTimer =
+      null;
+
+  }
+
+}
+
+
+/* ========================================
+   JSON設定をキャラクターへ反映
+======================================== */
+
+function applyCharacterSettings() {
+
+  if (!currentCharacter) {
+
+    return;
+
+  }
+
+
+  clearCharacterEffects();
+
+
+  /* =====================================
+     位置
+  ===================================== */
+
+  const x =
+    Number(
+      currentCharacter.x ?? 50
+    );
+
+
+  const y =
+    Number(
+      currentCharacter.y ?? 50
+    );
+
+
+  character.style.left =
+    `${x}%`;
+
+
+  character.style.top =
+    `${y}%`;
+
+
+  /* =====================================
+     サイズ
+  ===================================== */
+
+  const size =
+    Number(
+      currentCharacter.size ?? 100
+    );
+
+
+  characterScale =
+    size / 100;
+
+
+  characterX = 0;
+
+  characterY = 0;
+
+
+  updateCharacterTransform();
+
+
+  /* =====================================
+     登場タイミング
+  ===================================== */
+
+  const delay =
+    Number(
+      currentCharacter.delay ?? 0
+    );
+
+
+  const duration =
+    Number(
+      currentCharacter.duration ?? 700
+    );
+
+
+  /* =====================================
+     登場演出
+  ===================================== */
+
+  const entryClassMap = {
+
+    fade:
+      "entry-fade",
+
+    pop:
+      "entry-pop",
+
+    "from-left":
+      "entry-from-left",
+
+    "from-right":
+      "entry-from-right",
+
+    "from-bottom":
+      "entry-from-bottom",
+
+    "from-top":
+      "entry-from-top"
+
+  };
+
+
+  /* =====================================
+     登場後の動き
+  ===================================== */
+
+  const idleClassMap = {
+
+    float:
+      "idle-float",
+
+    jump:
+      "idle-jump",
+
+    rotate:
+      "idle-rotate",
+
+    sway:
+      "idle-sway"
+
+  };
+
+
+  const entryClass =
+    entryClassMap[
+      currentCharacter.entryEffect
+    ];
+
+
+  const idleClass =
+    idleClassMap[
+      currentCharacter.idleEffect
+    ];
+
+
+  /*
+   * 登場までは非表示
+   */
+
+  character.style.opacity =
+    "0";
+
+
+  entryTimer =
+    setTimeout(
+      () => {
+
+        character.style.opacity =
+          "1";
+
+
+        /*
+         * 登場演出あり
+         */
+
+        if (entryClass) {
+
+          character.classList.add(
+            entryClass
+          );
+
+
+          character.style.animationDuration =
+            `${duration}ms`;
+
+
+          character.style.animationTimingFunction =
+            "ease-out";
+
+
+          character.style.animationFillMode =
+            "both";
+
+        }
+
+
+        /*
+         * 登場演出終了後
+         */
+
+        idleTimer =
+          setTimeout(
+            () => {
+
+              if (entryClass) {
+
+                character.classList.remove(
+                  entryClass
+                );
+
+              }
+
+
+              character.style.animationDuration =
+                "";
+
+
+              character.style.animationTimingFunction =
+                "";
+
+
+              character.style.animationFillMode =
+                "";
+
+
+              /*
+               * 登場後の動き
+               */
+
+              if (idleClass) {
+
+                character.classList.add(
+                  idleClass
+                );
+
+              }
+
+            },
+
+            entryClass
+              ? duration
+              : 0
+
+          );
+
+      },
+
+      delay
+    );
+
+}
+
+
+/* ========================================
    キャラクターリセット
 ======================================== */
 
 function resetCharacter() {
 
-  characterX = 0;
-  characterY = 0;
-
-  characterScale = 1;
-
-
   /*
-   * JSONにサイズ指定がある場合
+   * 位置・サイズ・演出を
+   * JSONの設定値へ戻す
    */
 
-  if (
-    currentCharacter &&
-    currentCharacter.size !== undefined
-  ) {
-
-    const size =
-      Number(
-        currentCharacter.size
-      );
-
-
-    if (
-      Number.isFinite(size) &&
-      size > 0
-    ) {
-
-      characterScale =
-        size / 100;
-
-    }
-
-  }
+  applyCharacterSettings();
 
 
   previousDistance =
@@ -873,9 +1079,6 @@ function resetCharacter() {
 
 
   pointers.clear();
-
-
-  updateCharacterTransform();
 
 }
 
@@ -1105,10 +1308,6 @@ startButton.addEventListener(
   "click",
   async () => {
 
-    /*
-     * 念のため二重チェック
-     */
-
     if (
       !arDataReady ||
       !currentContent ||
@@ -1148,7 +1347,10 @@ startButton.addEventListener(
 
           fitCameraFrame();
 
-          resetCharacter();
+          /*
+           * ★ここでJSON設定を反映
+           */
+          applyCharacterSettings();
 
           setCameraZoom(1);
 
@@ -1222,10 +1424,6 @@ function capture() {
     areaRect.height;
 
 
-  /*
-   * 保存画像サイズ
-   */
-
   const longSide =
     1440;
 
@@ -1275,10 +1473,6 @@ function capture() {
   let sourceHeight =
     videoHeight;
 
-
-  /*
-   * object-fit: cover相当
-   */
 
   if (
     videoAspect >
@@ -1363,10 +1557,6 @@ function capture() {
   );
 
 
-  /*
-   * カメラ映像
-   */
-
   ctx.drawImage(
     video,
 
@@ -1420,14 +1610,16 @@ function capture() {
 
 
   /*
-   * ダウンロード用データ
+   * 保存用
    */
 
   canvas.toBlob(
     blob => {
 
       if (!blob) {
+
         return;
+
       }
 
 
@@ -1466,10 +1658,6 @@ function capture() {
     0.92
   );
 
-
-  /*
-   * 結果画面
-   */
 
   arScreen.classList.add(
     "hidden"
