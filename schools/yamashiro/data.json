@@ -2,14 +2,14 @@
   "schoolId": "yamashiro",
   "schoolName": "山代小学校",
   "projectName": "山代AR",
-  "generatedAt": "2026-09-15T05:31:59.452Z",
+  "generatedAt": "2026-09-15T05:43:04.945Z",
   "contents": [
     {
       "id": "Y001",
       "place": "古総湯",
       "characters": [
         {
-          "name": "ユゲッチ",
+          "name": "すぱクロくん",
           "image": "images/sample.png",
           "message": "山代温泉へようこそ！",
           "order": 1,
@@ -20,6 +20,19 @@
           "size": 100,
           "delay": 500,
           "duration": 350
+        },
+        {
+          "name": "ブルーバード",
+          "image": "images/sample2.png",
+          "message": "山代温泉へようこそ２！",
+          "order": 2,
+          "entryEffect": "from-bottom",
+          "idleEffect": "sway",
+          "x": 20,
+          "y": 20,
+          "size": 100,
+          "delay": 0,
+          "duration": 700
         }
       ]
     }
