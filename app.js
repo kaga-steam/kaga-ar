@@ -1,309 +1,419 @@
-/* ========================================
-   DOM
-======================================== */
+// ========================================
+// DOM
+// ========================================
 
-const startScreen =
-  document.getElementById("startScreen");
+const startScreen = document.getElementById("startScreen");
+const arScreen = document.getElementById("arScreen");
+const resultScreen = document.getElementById("resultScreen");
 
-const arScreen =
-  document.getElementById("arScreen");
+const startButton = document.getElementById("startButton");
 
-const resultScreen =
-  document.getElementById("resultScreen");
+const cameraWrapper = document.getElementById("cameraWrapper");
+const cameraArea = document.getElementById("cameraArea");
+const video = document.getElementById("camera");
+const character = document.getElementById("character");
 
-const startButton =
-  document.getElementById("startButton");
+const resetButton = document.getElementById("resetButton");
+const shutterButton = document.getElementById("shutterButton");
+const switchButton = document.getElementById("switchButton");
 
-const resetButton =
-  document.getElementById("resetButton");
+const canvas = document.getElementById("canvas");
+const retakeButton = document.getElementById("retakeButton");
+const saveButton = document.getElementById("saveButton");
 
-const captureButton =
-  document.getElementById("captureButton");
-
-const switchCameraButton =
-  document.getElementById("switchCameraButton");
-
-const backButton =
-  document.getElementById("backButton");
-
-const downloadButton =
-  document.getElementById("downloadButton");
-
-const status =
-  document.getElementById("status");
-
-const cameraWrapper =
-  document.getElementById("cameraWrapper");
-
-const cameraArea =
-  document.getElementById("cameraArea");
-
-const video =
-  document.getElementById("camera");
-
-const character =
-  document.getElementById("character");
-
-const zoomButtons =
-  document.querySelectorAll(".zoomButton");
-
-const canvas =
-  document.getElementById("captureCanvas");
-
-const ctx =
-  canvas.getContext("2d");
+const zoomButtons = document.querySelectorAll(".zoomButton");
 
 
-/* ========================================
-   カメラ
-======================================== */
+// ========================================
+// カメラ関連
+// ========================================
 
 let stream = null;
 
-let facingMode =
-  "environment";
-
-
-/* ========================================
-   擬似ズーム
-
-   1 / 1.5 / 2
-======================================== */
+let facingMode = "environment";
 
 let cameraZoom = 1;
 
 
-/* ========================================
-   キャラクター
-======================================== */
+// ========================================
+// キャラクター操作関連
+// ========================================
 
 let characterX = 0;
-
 let characterY = 0;
 
 let characterScale = 1;
 
+let dragging = false;
 
-/* ========================================
-   Pointer
-======================================== */
+let dragStartX = 0;
+let dragStartY = 0;
 
-const pointers =
-  new Map();
+let characterStartX = 0;
+let characterStartY = 0;
 
-let previousDistance =
-  null;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
 
 
-/* ========================================
-   撮影フレーム計算
+// ========================================
+// ARデータ
+// ========================================
 
-   縦：3:4
-   横：利用可能領域いっぱい
-======================================== */
+let schoolId = null;
+let contentId = null;
 
-function fitCameraFrame() {
+let schoolData = null;
+let currentContent = null;
+let currentCharacter = null;
 
-  const style =
-    getComputedStyle(
-      cameraWrapper
+
+// ========================================
+// URLパラメータ取得
+// ========================================
+
+function getUrlParameters() {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
     );
 
+  schoolId =
+    params.get("school");
 
-  const paddingX =
-    parseFloat(
-      style.paddingLeft
-    ) +
-    parseFloat(
-      style.paddingRight
+  contentId =
+    params.get("id");
+
+  console.log(
+    "school:",
+    schoolId
+  );
+
+  console.log(
+    "id:",
+    contentId
+  );
+
+}
+
+
+// ========================================
+// ARデータ読み込み
+// ========================================
+
+async function loadArData() {
+
+  if (!schoolId) {
+
+    throw new Error(
+      "URLにschoolが指定されていません。"
     );
 
+  }
 
-  const paddingY =
-    parseFloat(
-      style.paddingTop
-    ) +
-    parseFloat(
-      style.paddingBottom
+  if (!contentId) {
+
+    throw new Error(
+      "URLにidが指定されていません。"
     );
-
-
-  const availableWidth =
-    Math.max(
-      1,
-      cameraWrapper.clientWidth -
-      paddingX
-    );
-
-
-  const availableHeight =
-    Math.max(
-      1,
-      cameraWrapper.clientHeight -
-      paddingY
-    );
-
-
-  const portrait =
-    window.matchMedia(
-      "(orientation: portrait)"
-    ).matches;
-
-
-  /* ====================================
-     縦
-     3:4
-  ==================================== */
-
-  if (portrait) {
-
-    const targetAspect =
-      3 / 4;
-
-
-    const availableAspect =
-      availableWidth /
-      availableHeight;
-
-
-    let frameWidth;
-    let frameHeight;
-
-
-    if (
-      availableAspect >
-      targetAspect
-    ) {
-
-      frameHeight =
-        availableHeight;
-
-
-      frameWidth =
-        frameHeight *
-        targetAspect;
-
-    }
-    else {
-
-      frameWidth =
-        availableWidth;
-
-
-      frameHeight =
-        frameWidth /
-        targetAspect;
-
-    }
-
-
-    cameraArea.style.width =
-      `${Math.floor(frameWidth)}px`;
-
-
-    cameraArea.style.height =
-      `${Math.floor(frameHeight)}px`;
 
   }
 
 
-  /* ====================================
-     横
-
-     操作ボタン以外の領域を
-     最大限使用
-  ==================================== */
-
-  else {
-
-    cameraArea.style.width =
-      `${Math.floor(availableWidth)}px`;
+  const dataUrl =
+    `./schools/${encodeURIComponent(schoolId)}/data.json`;
 
 
-    cameraArea.style.height =
-      `${Math.floor(availableHeight)}px`;
+  console.log(
+    "data.json:",
+    dataUrl
+  );
+
+
+  const response =
+    await fetch(
+      dataUrl,
+      {
+        cache: "no-store"
+      }
+    );
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      `data.jsonを取得できませんでした。HTTP ${response.status}`
+    );
+
+  }
+
+
+  schoolData =
+    await response.json();
+
+
+  console.log(
+    "schoolData:",
+    schoolData
+  );
+
+
+  if (
+    !Array.isArray(
+      schoolData.contents
+    )
+  ) {
+
+    throw new Error(
+      "data.jsonのcontentsが正しくありません。"
+    );
+
+  }
+
+
+  currentContent =
+    schoolData.contents.find(
+      item =>
+        item.id === contentId
+    );
+
+
+  if (!currentContent) {
+
+    throw new Error(
+      `ID「${contentId}」のデータが見つかりません。`
+    );
+
+  }
+
+
+  if (
+    !Array.isArray(
+      currentContent.characters
+    ) ||
+    currentContent.characters.length === 0
+  ) {
+
+    throw new Error(
+      `ID「${contentId}」にキャラクターが設定されていません。`
+    );
+
+  }
+
+
+  // 今回は最初の1体だけ使用
+  currentCharacter =
+    currentContent.characters[0];
+
+
+  if (!currentCharacter.image) {
+
+    throw new Error(
+      "キャラクター画像が設定されていません。"
+    );
+
+  }
+
+
+  const imageUrl =
+    `./schools/${encodeURIComponent(schoolId)}/${currentCharacter.image}`;
+
+
+  console.log(
+    "character image:",
+    imageUrl
+  );
+
+
+  character.src =
+    imageUrl;
+
+
+  // JSONに初期サイズがある場合
+  if (
+    currentCharacter.size !== undefined
+  ) {
+
+    const size =
+      Number(
+        currentCharacter.size
+      );
+
+    if (
+      Number.isFinite(size) &&
+      size > 0
+    ) {
+
+      characterScale =
+        size / 100;
+
+    }
+
+  }
+
+
+  updateCharacterTransform();
+
+
+  console.log(
+    "currentContent:",
+    currentContent
+  );
+
+  console.log(
+    "currentCharacter:",
+    currentCharacter
+  );
+
+}
+
+
+// ========================================
+// 初期化
+// ========================================
+
+async function initializeApp() {
+
+  try {
+
+    getUrlParameters();
+
+    await loadArData();
+
+  }
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+    alert(
+      "ARデータの読み込みに失敗しました。\n\n" +
+      error.message
+    );
 
   }
 
 }
 
 
-/* ========================================
-   スタート
-======================================== */
+// ========================================
+// カメラ枠サイズ
+// ========================================
 
-startButton.addEventListener(
-  "click",
-  async () => {
+function fitCameraFrame() {
 
-    status.textContent =
-      "カメラを起動しています...";
-
-
-    try {
-
-      await startCamera();
+  if (
+    !cameraWrapper ||
+    !cameraArea
+  ) {
+    return;
+  }
 
 
-      startScreen.classList.add(
-        "hidden"
-      );
+  const wrapperRect =
+    cameraWrapper.getBoundingClientRect();
 
 
-      arScreen.classList.remove(
-        "hidden"
-      );
+  const availableWidth =
+    wrapperRect.width;
+
+  const availableHeight =
+    wrapperRect.height;
 
 
-      requestAnimationFrame(
-        () => {
+  if (
+    availableWidth <= 0 ||
+    availableHeight <= 0
+  ) {
+    return;
+  }
 
-          fitCameraFrame();
 
-          resetCharacter();
+  const portrait =
+    window.innerHeight >
+    window.innerWidth;
 
-          setCameraZoom(1);
 
-        }
-      );
+  if (portrait) {
+
+    // 縦画面は3:4
+    const targetAspect =
+      3 / 4;
+
+
+    let width =
+      availableWidth;
+
+    let height =
+      width / targetAspect;
+
+
+    if (
+      height >
+      availableHeight
+    ) {
+
+      height =
+        availableHeight;
+
+      width =
+        height *
+        targetAspect;
 
     }
-    catch (error) {
-
-      console.error(error);
 
 
-      status.textContent =
-        "カメラ起動失敗：" +
-        error.name +
-        " / " +
-        error.message;
+    cameraArea.style.width =
+      `${width}px`;
 
-    }
+    cameraArea.style.height =
+      `${height}px`;
 
   }
-);
+  else {
+
+    // 横画面は利用可能領域いっぱい
+    cameraArea.style.width =
+      `${availableWidth}px`;
+
+    cameraArea.style.height =
+      `${availableHeight}px`;
+
+  }
+
+}
 
 
-/* ========================================
-   カメラ開始
-======================================== */
+// ========================================
+// カメラ開始
+// ========================================
 
 async function startCamera() {
 
-  stopCamera();
+  if (stream) {
+
+    stream
+      .getTracks()
+      .forEach(
+        track =>
+          track.stop()
+      );
+
+    stream = null;
+
+  }
 
 
   const constraints = {
+
+    audio: false,
 
     video: {
 
       facingMode: {
         ideal: facingMode
-      },
-
-      aspectRatio: {
-        ideal: 4 / 3
       },
 
       width: {
@@ -314,9 +424,7 @@ async function startCamera() {
         ideal: 1440
       }
 
-    },
-
-    audio: false
+    }
 
   };
 
@@ -334,66 +442,63 @@ async function startCamera() {
   await video.play();
 
 
-  const track =
-    stream.getVideoTracks()[0];
-
-
-  console.log(
-    "Camera settings:",
-    track.getSettings()
-  );
+  fitCameraFrame();
 
 }
 
 
-/* ========================================
-   カメラ停止
-======================================== */
+// ========================================
+// カメラ切替
+// ========================================
 
-function stopCamera() {
+async function switchCamera() {
 
-  if (!stream) {
-    return;
+  facingMode =
+    facingMode === "environment"
+      ? "user"
+      : "environment";
+
+
+  setCameraZoom(1);
+
+
+  try {
+
+    await startCamera();
+
   }
+  catch (error) {
 
-
-  stream
-    .getTracks()
-    .forEach(
-      track => {
-
-        track.stop();
-
-      }
+    console.error(
+      error
     );
 
+    alert(
+      "カメラの切り替えに失敗しました。"
+    );
 
-  stream = null;
+  }
 
 }
 
 
-/* ========================================
-   擬似ズーム
-======================================== */
+// ========================================
+// 疑似ズーム
+// ========================================
 
-function setCameraZoom(zoom) {
+function setCameraZoom(
+  zoom
+) {
 
   cameraZoom =
-    zoom;
+    Number(
+      zoom
+    );
 
-
-  /*
-   * 画面表示
-   */
 
   video.style.transform =
     `scale(${cameraZoom})`;
 
-
-  /*
-   * 選択中ボタン
-   */
 
   zoomButtons.forEach(
     button => {
@@ -402,7 +507,6 @@ function setCameraZoom(zoom) {
         Number(
           button.dataset.zoom
         );
-
 
       button.classList.toggle(
         "active",
@@ -415,9 +519,809 @@ function setCameraZoom(zoom) {
 }
 
 
-/* ========================================
-   ズームボタン
-======================================== */
+// ========================================
+// キャラクター位置更新
+// ========================================
+
+function updateCharacterTransform() {
+
+  character.style.transform =
+    `translate(${characterX}px, ${characterY}px) scale(${characterScale})`;
+
+}
+
+
+// ========================================
+// キャラクターリセット
+// ========================================
+
+function resetCharacter() {
+
+  characterX = 0;
+  characterY = 0;
+
+  characterScale = 1;
+
+
+  // JSONにサイズ指定があれば使用
+  if (
+    currentCharacter &&
+    currentCharacter.size !== undefined
+  ) {
+
+    const size =
+      Number(
+        currentCharacter.size
+      );
+
+    if (
+      Number.isFinite(size) &&
+      size > 0
+    ) {
+
+      characterScale =
+        size / 100;
+
+    }
+
+  }
+
+
+  updateCharacterTransform();
+
+}
+
+
+// ========================================
+// 2点間距離
+// ========================================
+
+function getDistance(
+  touch1,
+  touch2
+) {
+
+  const dx =
+    touch2.clientX -
+    touch1.clientX;
+
+  const dy =
+    touch2.clientY -
+    touch1.clientY;
+
+
+  return Math.sqrt(
+    dx * dx +
+    dy * dy
+  );
+
+}
+
+
+// ========================================
+// Pointer操作
+// ========================================
+
+character.addEventListener(
+  "pointerdown",
+  event => {
+
+    if (
+      event.pointerType ===
+      "touch"
+    ) {
+      return;
+    }
+
+
+    dragging = true;
+
+
+    dragStartX =
+      event.clientX;
+
+    dragStartY =
+      event.clientY;
+
+
+    characterStartX =
+      characterX;
+
+    characterStartY =
+      characterY;
+
+
+    character.setPointerCapture(
+      event.pointerId
+    );
+
+  }
+);
+
+
+character.addEventListener(
+  "pointermove",
+  event => {
+
+    if (!dragging) {
+      return;
+    }
+
+
+    if (
+      event.pointerType ===
+      "touch"
+    ) {
+      return;
+    }
+
+
+    characterX =
+      characterStartX +
+      (
+        event.clientX -
+        dragStartX
+      );
+
+
+    characterY =
+      characterStartY +
+      (
+        event.clientY -
+        dragStartY
+      );
+
+
+    updateCharacterTransform();
+
+  }
+);
+
+
+character.addEventListener(
+  "pointerup",
+  event => {
+
+    dragging = false;
+
+
+    try {
+
+      character.releasePointerCapture(
+        event.pointerId
+      );
+
+    }
+    catch (error) {
+
+      // 何もしない
+
+    }
+
+  }
+);
+
+
+character.addEventListener(
+  "pointercancel",
+  () => {
+
+    dragging = false;
+
+  }
+);
+
+
+// ========================================
+// タッチ操作
+// ========================================
+
+character.addEventListener(
+  "touchstart",
+  event => {
+
+    event.preventDefault();
+
+
+    if (
+      event.touches.length === 1
+    ) {
+
+      dragging = true;
+
+
+      dragStartX =
+        event.touches[0].clientX;
+
+      dragStartY =
+        event.touches[0].clientY;
+
+
+      characterStartX =
+        characterX;
+
+      characterStartY =
+        characterY;
+
+    }
+
+
+    if (
+      event.touches.length === 2
+    ) {
+
+      dragging = false;
+
+
+      pinchStartDistance =
+        getDistance(
+          event.touches[0],
+          event.touches[1]
+        );
+
+
+      pinchStartScale =
+        characterScale;
+
+    }
+
+  },
+  {
+    passive: false
+  }
+);
+
+
+character.addEventListener(
+  "touchmove",
+  event => {
+
+    event.preventDefault();
+
+
+    if (
+      event.touches.length === 1 &&
+      dragging
+    ) {
+
+      characterX =
+        characterStartX +
+        (
+          event.touches[0].clientX -
+          dragStartX
+        );
+
+
+      characterY =
+        characterStartY +
+        (
+          event.touches[0].clientY -
+          dragStartY
+        );
+
+
+      updateCharacterTransform();
+
+    }
+
+
+    if (
+      event.touches.length === 2
+    ) {
+
+      const distance =
+        getDistance(
+          event.touches[0],
+          event.touches[1]
+        );
+
+
+      if (
+        pinchStartDistance >
+        0
+      ) {
+
+        characterScale =
+          pinchStartScale *
+          (
+            distance /
+            pinchStartDistance
+          );
+
+
+        characterScale =
+          Math.max(
+            0.2,
+            Math.min(
+              characterScale,
+              5
+            )
+          );
+
+
+        updateCharacterTransform();
+
+      }
+
+    }
+
+  },
+  {
+    passive: false
+  }
+);
+
+
+character.addEventListener(
+  "touchend",
+  event => {
+
+    event.preventDefault();
+
+
+    if (
+      event.touches.length === 0
+    ) {
+
+      dragging = false;
+
+    }
+
+
+    if (
+      event.touches.length === 1
+    ) {
+
+      dragging = true;
+
+
+      dragStartX =
+        event.touches[0].clientX;
+
+      dragStartY =
+        event.touches[0].clientY;
+
+
+      characterStartX =
+        characterX;
+
+      characterStartY =
+        characterY;
+
+    }
+
+  },
+  {
+    passive: false
+  }
+);
+
+
+// ========================================
+// 撮影
+// ========================================
+
+function capturePhoto() {
+
+  if (
+    !video.videoWidth ||
+    !video.videoHeight
+  ) {
+
+    alert(
+      "カメラの準備ができていません。"
+    );
+
+    return;
+
+  }
+
+
+  const areaRect =
+    cameraArea.getBoundingClientRect();
+
+
+  const frameAspect =
+    areaRect.width /
+    areaRect.height;
+
+
+  // 長辺1440px
+  let outputWidth;
+  let outputHeight;
+
+
+  if (
+    frameAspect >= 1
+  ) {
+
+    outputWidth =
+      1440;
+
+    outputHeight =
+      Math.round(
+        outputWidth /
+        frameAspect
+      );
+
+  }
+  else {
+
+    outputHeight =
+      1440;
+
+    outputWidth =
+      Math.round(
+        outputHeight *
+        frameAspect
+      );
+
+  }
+
+
+  canvas.width =
+    outputWidth;
+
+  canvas.height =
+    outputHeight;
+
+
+  const context =
+    canvas.getContext(
+      "2d"
+    );
+
+
+  const videoWidth =
+    video.videoWidth;
+
+  const videoHeight =
+    video.videoHeight;
+
+
+  const videoAspect =
+    videoWidth /
+    videoHeight;
+
+
+  let sourceX = 0;
+  let sourceY = 0;
+
+  let sourceWidth =
+    videoWidth;
+
+  let sourceHeight =
+    videoHeight;
+
+
+  // object-fit: cover と同じ範囲を計算
+  if (
+    videoAspect >
+    frameAspect
+  ) {
+
+    sourceWidth =
+      videoHeight *
+      frameAspect;
+
+    sourceX =
+      (
+        videoWidth -
+        sourceWidth
+      ) / 2;
+
+  }
+  else {
+
+    sourceHeight =
+      videoWidth /
+      frameAspect;
+
+    sourceY =
+      (
+        videoHeight -
+        sourceHeight
+      ) / 2;
+
+  }
+
+
+  // 疑似ズーム
+  if (
+    cameraZoom >
+    1
+  ) {
+
+    const zoomWidth =
+      sourceWidth /
+      cameraZoom;
+
+    const zoomHeight =
+      sourceHeight /
+      cameraZoom;
+
+
+    sourceX +=
+      (
+        sourceWidth -
+        zoomWidth
+      ) / 2;
+
+
+    sourceY +=
+      (
+        sourceHeight -
+        zoomHeight
+      ) / 2;
+
+
+    sourceWidth =
+      zoomWidth;
+
+    sourceHeight =
+      zoomHeight;
+
+  }
+
+
+  // カメラ画像
+  context.drawImage(
+    video,
+
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+
+    0,
+    0,
+    outputWidth,
+    outputHeight
+  );
+
+
+  // ========================================
+  // キャラクター描画
+  // ========================================
+
+  const characterRect =
+    character.getBoundingClientRect();
+
+
+  const scaleX =
+    outputWidth /
+    areaRect.width;
+
+  const scaleY =
+    outputHeight /
+    areaRect.height;
+
+
+  const drawX =
+    (
+      characterRect.left -
+      areaRect.left
+    ) *
+    scaleX;
+
+
+  const drawY =
+    (
+      characterRect.top -
+      areaRect.top
+    ) *
+    scaleY;
+
+
+  const drawWidth =
+    characterRect.width *
+    scaleX;
+
+
+  const drawHeight =
+    characterRect.height *
+    scaleY;
+
+
+  context.drawImage(
+    character,
+
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight
+  );
+
+
+  arScreen.classList.add(
+    "hidden"
+  );
+
+
+  resultScreen.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+// ========================================
+// 撮り直し
+// ========================================
+
+function retakePhoto() {
+
+  resultScreen.classList.add(
+    "hidden"
+  );
+
+
+  arScreen.classList.remove(
+    "hidden"
+  );
+
+
+  requestAnimationFrame(
+    () => {
+
+      fitCameraFrame();
+
+    }
+  );
+
+}
+
+
+// ========================================
+// 保存
+// ========================================
+
+function savePhoto() {
+
+  const dataUrl =
+    canvas.toDataURL(
+      "image/jpeg",
+      0.92
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    dataUrl;
+
+
+  link.download =
+    `${schoolId || "ar"}_${contentId || "photo"}.jpg`;
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  link.remove();
+
+}
+
+
+// ========================================
+// AR開始
+// ========================================
+
+async function startAR() {
+
+  // データが読み込めていない場合
+  if (
+    !currentContent ||
+    !currentCharacter
+  ) {
+
+    alert(
+      "ARデータが読み込まれていません。"
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    startScreen.classList.add(
+      "hidden"
+    );
+
+
+    arScreen.classList.remove(
+      "hidden"
+    );
+
+
+    await startCamera();
+
+
+    resetCharacter();
+
+
+    setCameraZoom(1);
+
+  }
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    arScreen.classList.add(
+      "hidden"
+    );
+
+
+    startScreen.classList.remove(
+      "hidden"
+    );
+
+
+    alert(
+      "カメラを起動できませんでした。\n\n" +
+      error.name +
+      "\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+// ========================================
+// イベント
+// ========================================
+
+startButton.addEventListener(
+  "click",
+  startAR
+);
+
+
+resetButton.addEventListener(
+  "click",
+  resetCharacter
+);
+
+
+shutterButton.addEventListener(
+  "click",
+  capturePhoto
+);
+
+
+switchButton.addEventListener(
+  "click",
+  switchCamera
+);
+
+
+retakeButton.addEventListener(
+  "click",
+  retakePhoto
+);
+
+
+saveButton.addEventListener(
+  "click",
+  savePhoto
+);
+
 
 zoomButtons.forEach(
   button => {
@@ -443,715 +1347,19 @@ zoomButtons.forEach(
 );
 
 
-/* ========================================
-   カメラ切替
-======================================== */
-
-switchCameraButton.addEventListener(
-  "click",
-  async () => {
-
-    const previousMode =
-      facingMode;
-
-
-    facingMode =
-      facingMode ===
-      "environment"
-        ? "user"
-        : "environment";
-
-
-    try {
-
-      await startCamera();
-
-
-      /*
-       * カメラ切替時は
-       * 1xへ戻す
-       */
-
-      setCameraZoom(1);
-
-
-      requestAnimationFrame(
-        fitCameraFrame
-      );
-
-    }
-    catch (error) {
-
-      console.error(error);
-
-
-      facingMode =
-        previousMode;
-
-
-      try {
-
-        await startCamera();
-
-      }
-      catch (secondError) {
-
-        console.error(
-          secondError
-        );
-
-      }
-
-    }
-
-  }
-);
-
-
-/* ========================================
-   キャラクター更新
-======================================== */
-
-function updateCharacterTransform() {
-
-  character.style.transform =
-    `
-      translate(-50%, -50%)
-      translate(
-        ${characterX}px,
-        ${characterY}px
-      )
-      scale(${characterScale})
-    `;
-
-}
-
-
-/* ========================================
-   キャラクターリセット
-======================================== */
-
-function resetCharacter() {
-
-  characterX = 0;
-
-  characterY = 0;
-
-  characterScale = 1;
-
-  previousDistance = null;
-
-  pointers.clear();
-
-  updateCharacterTransform();
-
-}
-
-
-resetButton.addEventListener(
-  "click",
-  resetCharacter
-);
-
-
-/* ========================================
-   Pointer
-======================================== */
-
-character.addEventListener(
-  "pointerdown",
-  pointerDown
-);
-
-
-character.addEventListener(
-  "pointermove",
-  pointerMove
-);
-
-
-character.addEventListener(
-  "pointerup",
-  pointerUp
-);
-
-
-character.addEventListener(
-  "pointercancel",
-  pointerUp
-);
-
-
-function pointerDown(event) {
-
-  event.preventDefault();
-
-
-  character.setPointerCapture(
-    event.pointerId
-  );
-
-
-  pointers.set(
-    event.pointerId,
-    {
-      x: event.clientX,
-      y: event.clientY
-    }
-  );
-
-
-  if (
-    pointers.size === 2
-  ) {
-
-    const points =
-      Array.from(
-        pointers.values()
-      );
-
-
-    previousDistance =
-      getDistance(
-        points[0],
-        points[1]
-      );
-
-  }
-
-}
-
-
-/* ========================================
-   Pointer Move
-======================================== */
-
-function pointerMove(event) {
-
-  if (
-    !pointers.has(
-      event.pointerId
-    )
-  ) {
-    return;
-  }
-
-
-  event.preventDefault();
-
-
-  const previous =
-    pointers.get(
-      event.pointerId
-    );
-
-
-  pointers.set(
-    event.pointerId,
-    {
-      x: event.clientX,
-      y: event.clientY
-    }
-  );
-
-
-  /* 1本指：移動 */
-
-  if (
-    pointers.size === 1
-  ) {
-
-    characterX +=
-      event.clientX -
-      previous.x;
-
-
-    characterY +=
-      event.clientY -
-      previous.y;
-
-
-    updateCharacterTransform();
-
-  }
-
-
-  /* 2本指：キャラクター拡大縮小 */
-
-  if (
-    pointers.size === 2
-  ) {
-
-    const points =
-      Array.from(
-        pointers.values()
-      );
-
-
-    const distance =
-      getDistance(
-        points[0],
-        points[1]
-      );
-
-
-    if (
-      previousDistance !== null &&
-      previousDistance > 0
-    ) {
-
-      characterScale *=
-        distance /
-        previousDistance;
-
-
-      characterScale =
-        Math.max(
-          0.3,
-          Math.min(
-            characterScale,
-            4
-          )
-        );
-
-
-      updateCharacterTransform();
-
-    }
-
-
-    previousDistance =
-      distance;
-
-  }
-
-}
-
-
-/* ========================================
-   Pointer Up
-======================================== */
-
-function pointerUp(event) {
-
-  pointers.delete(
-    event.pointerId
-  );
-
-
-  if (
-    pointers.size < 2
-  ) {
-
-    previousDistance =
-      null;
-
-  }
-
-}
-
-
-/* ========================================
-   距離
-======================================== */
-
-function getDistance(
-  a,
-  b
-) {
-
-  return Math.hypot(
-
-    a.x - b.x,
-
-    a.y - b.y
-
-  );
-
-}
-
-
-/* ========================================
-   撮影
-======================================== */
-
-captureButton.addEventListener(
-  "click",
-  capture
-);
-
-
-function capture() {
-
-  const videoWidth =
-    video.videoWidth;
-
-
-  const videoHeight =
-    video.videoHeight;
-
-
-  if (
-    !videoWidth ||
-    !videoHeight
-  ) {
-
-    alert(
-      "カメラ映像を取得できません。"
-    );
-
-    return;
-
-  }
-
-
-  const areaRect =
-    cameraArea.getBoundingClientRect();
-
-
-  const charRect =
-    character.getBoundingClientRect();
-
-
-  /*
-   * 撮影枠の実際の比率
-   */
-
-  const frameAspect =
-    areaRect.width /
-    areaRect.height;
-
-
-  /*
-   * 出力サイズ
-   */
-
-  const longSide =
-    1440;
-
-
-  if (
-    areaRect.height >
-    areaRect.width
-  ) {
-
-    canvas.height =
-      longSide;
-
-
-    canvas.width =
-      Math.round(
-        longSide *
-        frameAspect
-      );
-
-  }
-  else {
-
-    canvas.width =
-      longSide;
-
-
-    canvas.height =
-      Math.round(
-        longSide /
-        frameAspect
-      );
-
-  }
-
-
-  /*
-   * videoの実際の比率
-   */
-
-  const videoAspect =
-    videoWidth /
-    videoHeight;
-
-
-  /*
-   * object-fit: cover 相当の
-   * 基本切り取り
-   */
-
-  let sourceX = 0;
-
-  let sourceY = 0;
-
-  let sourceWidth =
-    videoWidth;
-
-  let sourceHeight =
-    videoHeight;
-
-
-  if (
-    videoAspect >
-    frameAspect
-  ) {
-
-    sourceWidth =
-      videoHeight *
-      frameAspect;
-
-
-    sourceX =
-      (
-        videoWidth -
-        sourceWidth
-      ) / 2;
-
-  }
-  else {
-
-    sourceHeight =
-      videoWidth /
-      frameAspect;
-
-
-    sourceY =
-      (
-        videoHeight -
-        sourceHeight
-      ) / 2;
-
-  }
-
-
-  /* ====================================
-     擬似ズームを撮影結果にも反映
-
-     1.5xなら中央の1/1.5
-     2xなら中央の1/2を使用
-  ==================================== */
-
-  if (
-    cameraZoom >
-    1
-  ) {
-
-    const zoomWidth =
-      sourceWidth /
-      cameraZoom;
-
-
-    const zoomHeight =
-      sourceHeight /
-      cameraZoom;
-
-
-    sourceX +=
-      (
-        sourceWidth -
-        zoomWidth
-      ) / 2;
-
-
-    sourceY +=
-      (
-        sourceHeight -
-        zoomHeight
-      ) / 2;
-
-
-    sourceWidth =
-      zoomWidth;
-
-
-    sourceHeight =
-      zoomHeight;
-
-  }
-
-
-  /*
-   * Canvasクリア
-   */
-
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  /*
-   * カメラ映像
-   */
-
-  ctx.drawImage(
-    video,
-
-    sourceX,
-    sourceY,
-
-    sourceWidth,
-    sourceHeight,
-
-    0,
-    0,
-
-    canvas.width,
-    canvas.height
-  );
-
-
-  /*
-   * キャラクター座標
-   */
-
-  const scaleX =
-    canvas.width /
-    areaRect.width;
-
-
-  const scaleY =
-    canvas.height /
-    areaRect.height;
-
-
-  /*
-   * キャラクター
-   */
-
-  ctx.drawImage(
-    character,
-
-    (
-      charRect.left -
-      areaRect.left
-    ) *
-      scaleX,
-
-    (
-      charRect.top -
-      areaRect.top
-    ) *
-      scaleY,
-
-    charRect.width *
-      scaleX,
-
-    charRect.height *
-      scaleY
-  );
-
-
-  /*
-   * 保存データ
-   */
-
-  canvas.toBlob(
-
-    blob => {
-
-      if (!blob) {
-        return;
-      }
-
-
-      if (
-        downloadButton.dataset.url
-      ) {
-
-        URL.revokeObjectURL(
-          downloadButton.dataset.url
-        );
-
-      }
-
-
-      const url =
-        URL.createObjectURL(
-          blob
-        );
-
-
-      downloadButton.href =
-        url;
-
-
-      downloadButton.dataset.url =
-        url;
-
-    },
-
-    "image/jpeg",
-
-    0.92
-
-  );
-
-
-  /*
-   * 結果画面
-   */
-
-  arScreen.classList.add(
-    "hidden"
-  );
-
-
-  resultScreen.classList.remove(
-    "hidden"
-  );
-
-}
-
-
-/* ========================================
-   撮り直す
-======================================== */
-
-backButton.addEventListener(
-  "click",
-  () => {
-
-    resultScreen.classList.add(
-      "hidden"
-    );
-
-
-    arScreen.classList.remove(
-      "hidden"
-    );
-
-
-    requestAnimationFrame(
-      fitCameraFrame
-    );
-
-  }
-);
-
-
-/* ========================================
-   サイズ変更
-======================================== */
+// ========================================
+// 画面サイズ変更
+// ========================================
 
 window.addEventListener(
   "resize",
   () => {
 
-    if (
-      !arScreen.classList.contains(
-        "hidden"
-      )
-    ) {
-
-      fitCameraFrame();
-
-    }
+    fitCameraFrame();
 
   }
 );
 
-
-/* ========================================
-   画面回転
-======================================== */
 
 window.addEventListener(
   "orientationchange",
@@ -1168,3 +1376,10 @@ window.addEventListener(
 
   }
 );
+
+
+// ========================================
+// 起動
+// ========================================
+
+initializeApp();
