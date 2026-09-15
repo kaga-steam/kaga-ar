@@ -41,8 +41,8 @@ const cameraArea =
 const video =
   document.getElementById("camera");
 
-const character =
-  document.getElementById("character");
+const characterLayer =
+  document.getElementById("characterLayer");
 
 const zoomButtons =
   document.querySelectorAll(".zoomButton");
@@ -63,7 +63,6 @@ let contentId = null;
 
 let schoolData = null;
 let currentContent = null;
-let currentCharacter = null;
 
 let arDataReady = false;
 
@@ -84,33 +83,13 @@ let cameraZoom = 1;
    キャラクター
 ======================================== */
 
-let characterX = 0;
-let characterY = 0;
+let characters = [];
 
-let characterScale = 1;
-
-
-/* ========================================
-   Pointer
-======================================== */
-
-const pointers =
-  new Map();
-
-let previousDistance =
-  null;
+let sequenceId = 0;
 
 
 /* ========================================
-   演出タイマー
-======================================== */
-
-let entryTimer = null;
-let idleTimer = null;
-
-
-/* ========================================
-   URLパラメータ取得
+   URL
 ======================================== */
 
 function getUrlParameters() {
@@ -120,25 +99,11 @@ function getUrlParameters() {
       window.location.search
     );
 
-
   schoolId =
     params.get("school");
 
-
   contentId =
     params.get("id");
-
-
-  console.log(
-    "school =",
-    schoolId
-  );
-
-
-  console.log(
-    "id =",
-    contentId
-  );
 
 
   if (!schoolId) {
@@ -162,54 +127,6 @@ function getUrlParameters() {
 
 
 /* ========================================
-   キャラクター画像読込確認
-======================================== */
-
-function waitForImage(
-  imageElement
-) {
-
-  return new Promise(
-    (resolve, reject) => {
-
-      if (
-        imageElement.complete &&
-        imageElement.naturalWidth > 0
-      ) {
-
-        resolve();
-
-        return;
-
-      }
-
-
-      imageElement.onload =
-        () => {
-
-          resolve();
-
-        };
-
-
-      imageElement.onerror =
-        () => {
-
-          reject(
-            new Error(
-              "キャラクター画像を読み込めませんでした。"
-            )
-          );
-
-        };
-
-    }
-  );
-
-}
-
-
-/* ========================================
    JSON読込
 ======================================== */
 
@@ -217,12 +134,6 @@ async function loadArData() {
 
   const dataUrl =
     `./schools/${encodeURIComponent(schoolId)}/data.json`;
-
-
-  console.log(
-    "data.json URL =",
-    dataUrl
-  );
 
 
   const response =
@@ -245,12 +156,6 @@ async function loadArData() {
 
   schoolData =
     await response.json();
-
-
-  console.log(
-    "schoolData =",
-    schoolData
-  );
 
 
   if (
@@ -283,12 +188,6 @@ async function loadArData() {
   }
 
 
-  console.log(
-    "currentContent =",
-    currentContent
-  );
-
-
   if (
     !Array.isArray(
       currentContent.characters
@@ -304,51 +203,17 @@ async function loadArData() {
 
 
   /*
-   * 現段階では1体目だけ使用
+   * 登場順で並べる
    */
-  currentCharacter =
-    currentContent.characters[0];
 
-
-  console.log(
-    "currentCharacter =",
-    currentCharacter
+  currentContent.characters.sort(
+    (a, b) =>
+      Number(a.order || 1) -
+      Number(b.order || 1)
   );
 
 
-  if (
-    !currentCharacter.image
-  ) {
-
-    throw new Error(
-      "キャラクター画像が設定されていません。"
-    );
-
-  }
-
-
-  const imageUrl =
-    `./schools/${encodeURIComponent(schoolId)}/${currentCharacter.image}`;
-
-
-  console.log(
-    "character image URL =",
-    imageUrl
-  );
-
-
-  character.src =
-    imageUrl;
-
-
-  await waitForImage(
-    character
-  );
-
-
-  console.log(
-    "character image loaded"
-  );
+  await createCharacters();
 
 
   arDataReady =
@@ -358,7 +223,183 @@ async function loadArData() {
 
 
 /* ========================================
-   アプリ初期化
+   キャラクター生成
+======================================== */
+
+async function createCharacters() {
+
+  characterLayer.innerHTML =
+    "";
+
+
+  characters =
+    [];
+
+
+  for (
+    const data of
+    currentContent.characters
+  ) {
+
+    if (!data.image) {
+
+      throw new Error(
+        `${data.name || "キャラクター"}の画像が設定されていません。`
+      );
+
+    }
+
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+
+    img.className =
+      "ar-character";
+
+
+    img.alt =
+      data.name || "キャラクター";
+
+
+    img.draggable =
+      false;
+
+
+    img.src =
+      `./schools/${encodeURIComponent(schoolId)}/${data.image}`;
+
+
+    img.style.left =
+      `${Number(data.x ?? 50)}%`;
+
+
+    img.style.top =
+      `${Number(data.y ?? 50)}%`;
+
+
+    /*
+     * orderが大きいものを
+     * 少し手前に表示
+     */
+
+    img.style.zIndex =
+      String(
+        10 +
+        Number(
+          data.order || 1
+        )
+      );
+
+
+    characterLayer.appendChild(
+      img
+    );
+
+
+    await waitForImage(
+      img
+    );
+
+
+    const item = {
+
+      data:
+        data,
+
+      element:
+        img,
+
+      offsetX:
+        0,
+
+      offsetY:
+        0,
+
+      scale:
+        Number(
+          data.size ?? 100
+        ) / 100,
+
+      pointers:
+        new Map(),
+
+      previousDistance:
+        null,
+
+      appeared:
+        false
+
+    };
+
+
+    characters.push(
+      item
+    );
+
+
+    updateCharacterTransform(
+      item
+    );
+
+
+    addCharacterPointerEvents(
+      item
+    );
+
+  }
+
+}
+
+
+/* ========================================
+   画像読込待ち
+======================================== */
+
+function waitForImage(
+  img
+) {
+
+  return new Promise(
+    (resolve, reject) => {
+
+      if (
+        img.complete &&
+        img.naturalWidth > 0
+      ) {
+
+        resolve();
+
+        return;
+
+      }
+
+
+      img.onload =
+        () => resolve();
+
+
+      img.onerror =
+        () => {
+
+          reject(
+            new Error(
+              `画像を読み込めませんでした：${img.src}`
+            )
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+/* ========================================
+   初期化
 ======================================== */
 
 async function initializeApp() {
@@ -386,16 +427,10 @@ async function initializeApp() {
     startButton.disabled =
       false;
 
-
-    console.log(
-      "AR data ready"
-    );
-
   }
   catch (error) {
 
     console.error(
-      "ARデータ読込エラー:",
       error
     );
 
@@ -418,7 +453,7 @@ async function initializeApp() {
 
 
 /* ========================================
-   撮影フレーム計算
+   撮影フレーム
 ======================================== */
 
 function fitCameraFrame() {
@@ -534,7 +569,7 @@ function fitCameraFrame() {
 
 
 /* ========================================
-   カメラ開始
+   カメラ
 ======================================== */
 
 async function startCamera() {
@@ -581,36 +616,23 @@ async function startCamera() {
 
   await video.play();
 
-
-  console.log(
-    "Camera settings:",
-    stream
-      .getVideoTracks()[0]
-      .getSettings()
-  );
-
 }
 
-
-/* ========================================
-   カメラ停止
-======================================== */
 
 function stopCamera() {
 
   if (!stream) {
+
     return;
+
   }
 
 
   stream
     .getTracks()
     .forEach(
-      track => {
-
-        track.stop();
-
-      }
+      track =>
+        track.stop()
     );
 
 
@@ -641,15 +663,14 @@ function setCameraZoom(
   zoomButtons.forEach(
     button => {
 
-      const value =
+      button.classList.toggle(
+
+        "active",
+
         Number(
           button.dataset.zoom
-        );
+        ) === cameraZoom
 
-
-      button.classList.toggle(
-        "active",
-        value === cameraZoom
       );
 
     }
@@ -657,10 +678,6 @@ function setCameraZoom(
 
 }
 
-
-/* ========================================
-   ズームボタン
-======================================== */
 
 zoomButtons.forEach(
   button => {
@@ -690,7 +707,7 @@ switchCameraButton.addEventListener(
   "click",
   async () => {
 
-    const previousMode =
+    const oldMode =
       facingMode;
 
 
@@ -722,21 +739,7 @@ switchCameraButton.addEventListener(
 
 
       facingMode =
-        previousMode;
-
-
-      try {
-
-        await startCamera();
-
-      }
-      catch (secondError) {
-
-        console.error(
-          secondError
-        );
-
-      }
+        oldMode;
 
     }
 
@@ -745,31 +748,266 @@ switchCameraButton.addEventListener(
 
 
 /* ========================================
-   キャラクター更新
+   transform更新
 ======================================== */
 
-function updateCharacterTransform() {
+function updateCharacterTransform(
+  item
+) {
 
-  character.style.transform =
+  item.element.style.transform =
     `
       translate(-50%, -50%)
       translate(
-        ${characterX}px,
-        ${characterY}px
+        ${item.offsetX}px,
+        ${item.offsetY}px
       )
-      scale(${characterScale})
+      scale(${item.scale})
     `;
 
 }
 
 
 /* ========================================
-   演出クラス削除
+   Pointer操作
 ======================================== */
 
-function clearCharacterEffects() {
+function addCharacterPointerEvents(
+  item
+) {
 
-  character.classList.remove(
+  const el =
+    item.element;
+
+
+  el.addEventListener(
+    "pointerdown",
+    event => {
+
+      if (!item.appeared) {
+
+        return;
+
+      }
+
+
+      event.preventDefault();
+
+
+      el.setPointerCapture(
+        event.pointerId
+      );
+
+
+      item.pointers.set(
+        event.pointerId,
+        {
+          x:
+            event.clientX,
+
+          y:
+            event.clientY
+        }
+      );
+
+
+      if (
+        item.pointers.size === 2
+      ) {
+
+        const points =
+          Array.from(
+            item.pointers.values()
+          );
+
+
+        item.previousDistance =
+          getDistance(
+            points[0],
+            points[1]
+          );
+
+      }
+
+    }
+  );
+
+
+  el.addEventListener(
+    "pointermove",
+    event => {
+
+      if (
+        !item.pointers.has(
+          event.pointerId
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      event.preventDefault();
+
+
+      const previous =
+        item.pointers.get(
+          event.pointerId
+        );
+
+
+      item.pointers.set(
+        event.pointerId,
+        {
+          x:
+            event.clientX,
+
+          y:
+            event.clientY
+        }
+      );
+
+
+      /*
+       * 1本指：移動
+       */
+
+      if (
+        item.pointers.size === 1
+      ) {
+
+        item.offsetX +=
+          event.clientX -
+          previous.x;
+
+
+        item.offsetY +=
+          event.clientY -
+          previous.y;
+
+
+        updateCharacterTransform(
+          item
+        );
+
+      }
+
+
+      /*
+       * 2本指：拡大縮小
+       */
+
+      if (
+        item.pointers.size === 2
+      ) {
+
+        const points =
+          Array.from(
+            item.pointers.values()
+          );
+
+
+        const distance =
+          getDistance(
+            points[0],
+            points[1]
+          );
+
+
+        if (
+          item.previousDistance !== null &&
+          item.previousDistance > 0
+        ) {
+
+          item.scale *=
+            distance /
+            item.previousDistance;
+
+
+          item.scale =
+            Math.max(
+              0.3,
+              Math.min(
+                item.scale,
+                4
+              )
+            );
+
+
+          updateCharacterTransform(
+            item
+          );
+
+        }
+
+
+        item.previousDistance =
+          distance;
+
+      }
+
+    }
+  );
+
+
+  function pointerEnd(
+    event
+  ) {
+
+    item.pointers.delete(
+      event.pointerId
+    );
+
+
+    if (
+      item.pointers.size < 2
+    ) {
+
+      item.previousDistance =
+        null;
+
+    }
+
+  }
+
+
+  el.addEventListener(
+    "pointerup",
+    pointerEnd
+  );
+
+
+  el.addEventListener(
+    "pointercancel",
+    pointerEnd
+  );
+
+}
+
+
+function getDistance(
+  a,
+  b
+) {
+
+  return Math.hypot(
+    a.x - b.x,
+    a.y - b.y
+  );
+
+}
+
+
+/* ========================================
+   演出削除
+======================================== */
+
+function clearCharacterEffects(
+  item
+) {
+
+  item.element.classList.remove(
 
     "entry-fade",
     "entry-pop",
@@ -786,127 +1024,77 @@ function clearCharacterEffects() {
   );
 
 
-  character.style.animationDuration =
+  item.element.style.animationDuration =
     "";
 
 
-  character.style.animationTimingFunction =
+  item.element.style.animationTimingFunction =
     "";
 
 
-  character.style.animationFillMode =
+  item.element.style.animationFillMode =
     "";
-
-
-  if (entryTimer) {
-
-    clearTimeout(
-      entryTimer
-    );
-
-    entryTimer =
-      null;
-
-  }
-
-
-  if (idleTimer) {
-
-    clearTimeout(
-      idleTimer
-    );
-
-    idleTimer =
-      null;
-
-  }
 
 }
 
 
 /* ========================================
-   JSON設定をキャラクターへ反映
+   1体を登場させる
 ======================================== */
 
-function applyCharacterSettings() {
+async function showCharacter(
+  item,
+  mySequenceId
+) {
 
-  if (!currentCharacter) {
+  const data =
+    item.data;
 
-    return;
+
+  /*
+   * 自分の順番になってから
+   * delayを待つ
+   */
+
+  await wait(
+    Number(
+      data.delay ?? 0
+    )
+  );
+
+
+  /*
+   * リセットされた場合は中止
+   */
+
+  if (
+    mySequenceId !==
+    sequenceId
+  ) {
+
+    return false;
 
   }
 
 
-  clearCharacterEffects();
+  clearCharacterEffects(
+    item
+  );
 
 
-  /* =====================================
-     位置
-  ===================================== */
-
-  const x =
-    Number(
-      currentCharacter.x ?? 50
-    );
+  const el =
+    item.element;
 
 
-  const y =
-    Number(
-      currentCharacter.y ?? 50
-    );
+  el.style.opacity =
+    "1";
 
 
-  character.style.left =
-    `${x}%`;
+  item.appeared =
+    true;
 
 
-  character.style.top =
-    `${y}%`;
-
-
-  /* =====================================
-     サイズ
-  ===================================== */
-
-  const size =
-    Number(
-      currentCharacter.size ?? 100
-    );
-
-
-  characterScale =
-    size / 100;
-
-
-  characterX = 0;
-
-  characterY = 0;
-
-
-  updateCharacterTransform();
-
-
-  /* =====================================
-     登場タイミング
-  ===================================== */
-
-  const delay =
-    Number(
-      currentCharacter.delay ?? 0
-    );
-
-
-  const duration =
-    Number(
-      currentCharacter.duration ?? 700
-    );
-
-
-  /* =====================================
-     登場演出
-  ===================================== */
-
-  const entryClassMap = {
+  const entryMap = {
 
     fade:
       "entry-fade",
@@ -929,11 +1117,7 @@ function applyCharacterSettings() {
   };
 
 
-  /* =====================================
-     登場後の動き
-  ===================================== */
-
-  const idleClassMap = {
+  const idleMap = {
 
     float:
       "idle-float",
@@ -951,353 +1135,239 @@ function applyCharacterSettings() {
 
 
   const entryClass =
-    entryClassMap[
-      currentCharacter.entryEffect
+    entryMap[
+      data.entryEffect
     ];
 
 
-  const idleClass =
-    idleClassMap[
-      currentCharacter.idleEffect
-    ];
-
-
-  /*
-   * 登場までは非表示
-   */
-
-  character.style.opacity =
-    "0";
-
-
-  entryTimer =
-    setTimeout(
-      () => {
-
-        character.style.opacity =
-          "1";
-
-
-        /*
-         * 登場演出あり
-         */
-
-        if (entryClass) {
-
-          character.classList.add(
-            entryClass
-          );
-
-
-          character.style.animationDuration =
-            `${duration}ms`;
-
-
-          character.style.animationTimingFunction =
-            "ease-out";
-
-
-          character.style.animationFillMode =
-            "both";
-
-        }
-
-
-        /*
-         * 登場演出終了後
-         */
-
-        idleTimer =
-          setTimeout(
-            () => {
-
-              if (entryClass) {
-
-                character.classList.remove(
-                  entryClass
-                );
-
-              }
-
-
-              character.style.animationDuration =
-                "";
-
-
-              character.style.animationTimingFunction =
-                "";
-
-
-              character.style.animationFillMode =
-                "";
-
-
-              /*
-               * 登場後の動き
-               */
-
-              if (idleClass) {
-
-                character.classList.add(
-                  idleClass
-                );
-
-              }
-
-            },
-
-            entryClass
-              ? duration
-              : 0
-
-          );
-
-      },
-
-      delay
-    );
-
-}
-
-
-/* ========================================
-   キャラクターリセット
-======================================== */
-
-function resetCharacter() {
-
-  /*
-   * 位置・サイズ・演出を
-   * JSONの設定値へ戻す
-   */
-
-  applyCharacterSettings();
-
-
-  previousDistance =
-    null;
-
-
-  pointers.clear();
-
-}
-
-
-resetButton.addEventListener(
-  "click",
-  resetCharacter
-);
-
-
-/* ========================================
-   Pointer Events
-======================================== */
-
-character.addEventListener(
-  "pointerdown",
-  pointerDown
-);
-
-character.addEventListener(
-  "pointermove",
-  pointerMove
-);
-
-character.addEventListener(
-  "pointerup",
-  pointerUp
-);
-
-character.addEventListener(
-  "pointercancel",
-  pointerUp
-);
-
-
-function pointerDown(
-  event
-) {
-
-  event.preventDefault();
-
-
-  character.setPointerCapture(
-    event.pointerId
-  );
-
-
-  pointers.set(
-    event.pointerId,
-    {
-      x: event.clientX,
-      y: event.clientY
-    }
-  );
-
-
-  if (
-    pointers.size === 2
-  ) {
-
-    const points =
-      Array.from(
-        pointers.values()
-      );
-
-
-    previousDistance =
-      getDistance(
-        points[0],
-        points[1]
-      );
-
-  }
-
-}
-
-
-function pointerMove(
-  event
-) {
-
-  if (
-    !pointers.has(
-      event.pointerId
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  event.preventDefault();
-
-
-  const previous =
-    pointers.get(
-      event.pointerId
+  const duration =
+    Math.max(
+      0,
+      Number(
+        data.duration ?? 700
+      )
     );
 
 
-  pointers.set(
-    event.pointerId,
-    {
-      x: event.clientX,
-      y: event.clientY
-    }
-  );
-
-
   /*
-   * 1本指
+   * 登場演出
    */
 
-  if (
-    pointers.size === 1
-  ) {
+  if (entryClass) {
 
-    characterX +=
-      event.clientX -
-      previous.x;
+    el.classList.add(
+      entryClass
+    );
 
 
-    characterY +=
-      event.clientY -
-      previous.y;
+    el.style.animationDuration =
+      `${duration}ms`;
 
 
-    updateCharacterTransform();
-
-  }
-
-
-  /*
-   * 2本指
-   */
-
-  if (
-    pointers.size === 2
-  ) {
-
-    const points =
-      Array.from(
-        pointers.values()
-      );
+    el.style.animationTimingFunction =
+      "ease-out";
 
 
-    const distance =
-      getDistance(
-        points[0],
-        points[1]
-      );
+    el.style.animationFillMode =
+      "both";
+
+
+    await wait(
+      duration
+    );
 
 
     if (
-      previousDistance !== null &&
-      previousDistance > 0
+      mySequenceId !==
+      sequenceId
     ) {
 
-      characterScale *=
-        distance /
-        previousDistance;
-
-
-      characterScale =
-        Math.max(
-          0.3,
-          Math.min(
-            characterScale,
-            4
-          )
-        );
-
-
-      updateCharacterTransform();
+      return false;
 
     }
 
 
-    previousDistance =
-      distance;
+    el.classList.remove(
+      entryClass
+    );
+
+
+    el.style.animationDuration =
+      "";
+
+
+    el.style.animationTimingFunction =
+      "";
+
+
+    el.style.animationFillMode =
+      "";
 
   }
+
+
+  /*
+   * 登場後の動き
+   */
+
+  const idleClass =
+    idleMap[
+      data.idleEffect
+    ];
+
+
+  if (idleClass) {
+
+    el.classList.add(
+      idleClass
+    );
+
+  }
+
+
+  return true;
 
 }
 
 
-function pointerUp(
-  event
-) {
+/* ========================================
+   全キャラクターを順番に登場
+======================================== */
 
-  pointers.delete(
-    event.pointerId
+async function startCharacterSequence() {
+
+  /*
+   * 前の実行を無効化
+   */
+
+  sequenceId++;
+
+
+  const mySequenceId =
+    sequenceId;
+
+
+  /*
+   * 全員を初期状態へ
+   */
+
+  characters.forEach(
+    item => {
+
+      clearCharacterEffects(
+        item
+      );
+
+
+      item.offsetX =
+        0;
+
+
+      item.offsetY =
+        0;
+
+
+      item.scale =
+        Number(
+          item.data.size ?? 100
+        ) / 100;
+
+
+      item.element.style.left =
+        `${Number(
+          item.data.x ?? 50
+        )}%`;
+
+
+      item.element.style.top =
+        `${Number(
+          item.data.y ?? 50
+        )}%`;
+
+
+      item.element.style.opacity =
+        "0";
+
+
+      item.appeared =
+        false;
+
+
+      item.pointers.clear();
+
+
+      item.previousDistance =
+        null;
+
+
+      updateCharacterTransform(
+        item
+      );
+
+    }
   );
 
 
-  if (
-    pointers.size < 2
+  /*
+   * order順に登場
+   */
+
+  for (
+    const item of characters
   ) {
 
-    previousDistance =
-      null;
+    const completed =
+      await showCharacter(
+        item,
+        mySequenceId
+      );
+
+
+    if (!completed) {
+
+      return;
+
+    }
 
   }
 
 }
 
 
-function getDistance(
-  a,
-  b
+/* ========================================
+   wait
+======================================== */
+
+function wait(
+  ms
 ) {
 
-  return Math.hypot(
-    a.x - b.x,
-    a.y - b.y
+  return new Promise(
+    resolve => {
+
+      setTimeout(
+        resolve,
+        ms
+      );
+
+    }
   );
 
 }
+
+
+/* ========================================
+   リセット
+======================================== */
+
+resetButton.addEventListener(
+  "click",
+  () => {
+
+    startCharacterSequence();
+
+  }
+);
 
 
 /* ========================================
@@ -1310,8 +1380,7 @@ startButton.addEventListener(
 
     if (
       !arDataReady ||
-      !currentContent ||
-      !currentCharacter
+      !currentContent
     ) {
 
       alert(
@@ -1347,12 +1416,13 @@ startButton.addEventListener(
 
           fitCameraFrame();
 
-          /*
-           * ★ここでJSON設定を反映
-           */
-          applyCharacterSettings();
 
-          setCameraZoom(1);
+          setCameraZoom(
+            1
+          );
+
+
+          startCharacterSequence();
 
         }
       );
@@ -1415,10 +1485,6 @@ function capture() {
     cameraArea.getBoundingClientRect();
 
 
-  const charRect =
-    character.getBoundingClientRect();
-
-
   const frameAspect =
     areaRect.width /
     areaRect.height;
@@ -1473,6 +1539,10 @@ function capture() {
   let sourceHeight =
     videoHeight;
 
+
+  /*
+   * object-fit: cover相当
+   */
 
   if (
     videoAspect >
@@ -1557,6 +1627,10 @@ function capture() {
   );
 
 
+  /*
+   * カメラ映像
+   */
+
   ctx.drawImage(
     video,
 
@@ -1573,7 +1647,7 @@ function capture() {
 
 
   /*
-   * キャラクター
+   * 表示済みの全キャラクター
    */
 
   const scaleX =
@@ -1586,31 +1660,59 @@ function capture() {
     areaRect.height;
 
 
-  ctx.drawImage(
-    character,
+  const visibleCharacters =
+    characters
+      .filter(
+        item =>
+          item.appeared
+      )
+      .sort(
+        (a, b) =>
+          Number(
+            a.data.order || 1
+          ) -
+          Number(
+            b.data.order || 1
+          )
+      );
 
-    (
-      charRect.left -
-      areaRect.left
-    ) *
-      scaleX,
 
-    (
-      charRect.top -
-      areaRect.top
-    ) *
-      scaleY,
+  visibleCharacters.forEach(
+    item => {
 
-    charRect.width *
-      scaleX,
+      const rect =
+        item.element
+          .getBoundingClientRect();
 
-    charRect.height *
-      scaleY
+
+      ctx.drawImage(
+        item.element,
+
+        (
+          rect.left -
+          areaRect.left
+        ) *
+          scaleX,
+
+        (
+          rect.top -
+          areaRect.top
+        ) *
+          scaleY,
+
+        rect.width *
+          scaleX,
+
+        rect.height *
+          scaleY
+      );
+
+    }
   );
 
 
   /*
-   * 保存用
+   * 保存データ
    */
 
   canvas.toBlob(
@@ -1672,7 +1774,7 @@ function capture() {
 
 
 /* ========================================
-   撮り直し
+   撮り直す
 ======================================== */
 
 backButton.addEventListener(
@@ -1741,7 +1843,7 @@ window.addEventListener(
 
 
 /* ========================================
-   起動時
+   起動
 ======================================== */
 
 initializeApp();
