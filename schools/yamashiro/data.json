@@ -1,0 +1,23 @@
+{
+  "schoolId": "yamashiro",
+  "schoolName": "山代小学校",
+  "projectName": "山代AR",
+  "contents": [
+    {
+      "id": "Y001",
+      "place": "テスト場所1",
+      "characters": [
+        {
+          "name": "テストキャラクター",
+          "image": "images/sample.png",
+          "message": "こんにちは！",
+          "order": 1,
+          "effect": "none",
+          "x": 50,
+          "y": 50,
+          "size": 100
+        }
+      ]
+    }
+  ]
+}
