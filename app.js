@@ -1018,7 +1018,7 @@ function clearCharacterEffects(
 
     "idle-float",
     "idle-jump",
-    "idle-rotate",
+    "idle-shake",
     "idle-sway"
 
   );
@@ -1125,8 +1125,8 @@ async function showCharacter(
     jump:
       "idle-jump",
 
-    rotate:
-      "idle-rotate",
+    shake:
+      "idle-shake",
 
     sway:
       "idle-sway"
