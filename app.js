@@ -32,6 +32,12 @@ const downloadButton =
 const status =
   document.getElementById("status");
 
+const siteTitle =
+  document.getElementById("siteTitle");
+
+const siteDescription =
+  document.getElementById("siteDescription");
+
 const cameraWrapper =
   document.getElementById("cameraWrapper");
 
@@ -157,6 +163,21 @@ async function loadArData() {
   schoolData =
     await response.json();
 
+   /*
+    * 基本設定を画面へ反映
+    */
+   
+   if (siteTitle) {
+     siteTitle.textContent =
+       schoolData.siteTitle ||
+       "KAGA AR";
+   }
+   
+   if (siteDescription) {
+     siteDescription.textContent =
+       schoolData.siteDescription ||
+       "カメラを起動して、キャラクターと一緒に撮影できます。";
+   }
 
   if (
     !Array.isArray(
@@ -416,13 +437,9 @@ async function initializeApp() {
 
     getUrlParameters();
 
-
     await loadArData();
 
-
-    status.textContent =
-      `${schoolData.projectName || "学校AR"} / ${currentContent.place || contentId}`;
-
+    status.textContent = currentContent.place || contentId;
 
     startButton.disabled =
       false;
