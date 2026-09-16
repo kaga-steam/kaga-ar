@@ -717,24 +717,29 @@ a {
 
 
 /* ========================================
-   登場後：回転
+   登場後：ぷるぷる
 ======================================== */
 
-.idle-rotate {
-  animation-name: idleRotate;
-  animation-duration: 3s;
+.idle-shake {
+  animation-name: idleShake;
+  animation-duration: 0.7s;
   animation-iteration-count: infinite;
-  animation-timing-function: linear;
+  animation-timing-function: ease-in-out;
 }
 
-@keyframes idleRotate {
+@keyframes idleShake {
 
-  from {
-    rotate: 0deg;
+  0%,
+  100% {
+    translate: 0 0;
   }
 
-  to {
-    rotate: 360deg;
+  25% {
+    translate: -4px 0;
+  }
+
+  75% {
+    translate: 4px 0;
   }
 
 }
