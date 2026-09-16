@@ -1,8 +1,9 @@
 {
   "schoolId": "yamashiro",
   "schoolName": "山代小学校",
-  "projectName": "山代AR",
-  "generatedAt": "2026-09-16T04:34:24.122Z",
+  "siteTitle": "山代温泉AR",
+  "siteDescription": "カメラを起動して、キャラクターと一緒に撮影できます。",
+  "generatedAt": "2026-09-16T09:14:03.811Z",
   "contents": [
     {
       "id": "Y001",
