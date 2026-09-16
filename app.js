@@ -166,6 +166,7 @@ async function loadArData() {
    /*
     * 基本設定を画面へ反映
     */
+   document.title = schoolData.siteTitle || "KAGA AR";
    
    if (siteTitle) {
      siteTitle.textContent =
