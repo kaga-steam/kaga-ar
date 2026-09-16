@@ -722,7 +722,7 @@ a {
 
 .idle-shake {
   animation-name: idleShake;
-  animation-duration: 0.7s;
+  animation-duration: 0.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
 }
@@ -735,11 +735,15 @@ a {
   }
 
   25% {
-    translate: -4px 0;
+    translate: -5px 0;
+  }
+
+  50% {
+    translate: 5px 0;
   }
 
   75% {
-    translate: 4px 0;
+    translate: -3px 0;
   }
 
 }
