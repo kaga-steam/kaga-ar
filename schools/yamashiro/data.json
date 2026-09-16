@@ -2,7 +2,7 @@
   "schoolId": "yamashiro",
   "schoolName": "山代小学校",
   "projectName": "山代AR",
-  "generatedAt": "2026-09-16T04:21:09.604Z",
+  "generatedAt": "2026-09-16T04:34:24.122Z",
   "contents": [
     {
       "id": "Y001",
@@ -37,7 +37,7 @@
           "image": "images/カニ.png",
           "order": 3,
           "entryEffect": "fade",
-          "idleEffect": "rotate",
+          "idleEffect": "shake",
           "x": 20,
           "y": 80,
           "size": 80,
