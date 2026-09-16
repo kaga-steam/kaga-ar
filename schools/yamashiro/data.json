@@ -2,7 +2,7 @@
   "schoolId": "yamashiro",
   "schoolName": "山代小学校",
   "projectName": "山代AR",
-  "generatedAt": "2026-09-15T05:43:04.945Z",
+  "generatedAt": "2026-09-16T04:21:09.604Z",
   "contents": [
     {
       "id": "Y001",
@@ -11,9 +11,8 @@
         {
           "name": "すぱクロくん",
           "image": "images/sample.png",
-          "message": "山代温泉へようこそ！",
           "order": 1,
-          "entryEffect": "pop",
+          "entryEffect": "fade",
           "idleEffect": "float",
           "x": 80,
           "y": 50,
@@ -24,13 +23,24 @@
         {
           "name": "ブルーバード",
           "image": "images/sample2.png",
-          "message": "山代温泉へようこそ２！",
           "order": 2,
           "entryEffect": "from-bottom",
           "idleEffect": "sway",
           "x": 20,
           "y": 20,
           "size": 100,
+          "delay": 0,
+          "duration": 700
+        },
+        {
+          "name": "カニ",
+          "image": "images/カニ.png",
+          "order": 3,
+          "entryEffect": "fade",
+          "idleEffect": "rotate",
+          "x": 20,
+          "y": 80,
+          "size": 80,
           "delay": 0,
           "duration": 700
         }
