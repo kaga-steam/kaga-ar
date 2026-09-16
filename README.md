@@ -1,4 +1,4 @@
-# kaga-ar-platform
+# kaga-ar
 AR学習共通プラットフォーム
 
 ## 主な機能
