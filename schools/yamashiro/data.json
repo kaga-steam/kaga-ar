@@ -3,45 +3,21 @@
   "schoolName": "山代小学校",
   "siteTitle": "山代温泉AR",
   "siteDescription": "カメラを起動して、キャラクターと一緒に撮影できます。",
-  "generatedAt": "2026-09-17T09:25:21.389Z",
+  "generatedAt": "2026-09-18T02:10:21.104Z",
   "contents": [
     {
-      "id": "cee3c28157e54f7ca320184caf591b37",
-      "place": "古総湯",
+      "id": "86ff78890446441cbd7f639cd3e1f4c5",
+      "place": "いっぷくや",
       "characters": [
         {
-          "name": "すぱクロくん",
-          "image": "images/sample.png",
+          "name": "スパクロ",
+          "image": "images/スパクロくん.png",
           "order": 1,
-          "entryEffect": "fade",
+          "entryEffect": "pop",
           "idleEffect": "float",
-          "x": 80,
+          "x": 50,
           "y": 50,
           "size": 100,
-          "delay": 500,
-          "duration": 350
-        },
-        {
-          "name": "ブルーバード",
-          "image": "images/sample2.png",
-          "order": 2,
-          "entryEffect": "from-bottom",
-          "idleEffect": "sway",
-          "x": 20,
-          "y": 20,
-          "size": 100,
-          "delay": 0,
-          "duration": 700
-        },
-        {
-          "name": "カニ",
-          "image": "images/カニ.png",
-          "order": 3,
-          "entryEffect": "fade",
-          "idleEffect": "shake",
-          "x": 20,
-          "y": 80,
-          "size": 80,
           "delay": 0,
           "duration": 700
         }
