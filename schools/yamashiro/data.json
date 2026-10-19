@@ -1,9 +1,9 @@
-"{
+{
   ""schoolId"": ""yamashiro"",
   ""schoolName"": ""山代小学校"",
   ""siteTitle"": ""山代温泉AR"",
   ""siteDescription"": ""カメラを起動して、キャラクターと一緒に撮影できます。"",
-  ""generatedAt"": ""2026-10-19T17:04:15.136Z"",
+  ""generatedAt"": ""2026-10-19T17:06:38.161Z"",
   ""contents"": [
     {
       ""id"": ""86ff78890446441cbd7f639cd3e1f4c5"",
@@ -23,7 +23,7 @@
         },
         {
           ""name"": ""タラバガニちゃん"",
-          ""image"": ""images/IMG_20261014_100811.jpg"",
+          ""image"": ""images/タラバガニちゃん.jpg"",
           ""order"": 1,
           ""entryEffect"": ""fade"",
           ""idleEffect"": ""shake"",
@@ -35,7 +35,7 @@
         },
         {
           ""name"": ""ハチグラサン"",
-          ""image"": ""images/名称未設定のデザイン.png"",
+          ""image"": ""images/ハチグラサン.png"",
           ""order"": 1,
           ""entryEffect"": ""pop"",
           ""idleEffect"": ""float"",
@@ -48,4 +48,4 @@
       ]
     }
   ]
-}"
+}
