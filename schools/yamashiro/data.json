@@ -1,49 +1,49 @@
 {
-  ""schoolId"": ""yamashiro"",
-  ""schoolName"": ""山代小学校"",
-  ""siteTitle"": ""山代温泉AR"",
-  ""siteDescription"": ""カメラを起動して、キャラクターと一緒に撮影できます。"",
-  ""generatedAt"": ""2026-10-19T17:06:38.161Z"",
-  ""contents"": [
+  "schoolId": "yamashiro",
+  "schoolName": "山代小学校",
+  "siteTitle": "山代温泉AR",
+  "siteDescription": "カメラを起動して、キャラクターと一緒に撮影できます。",
+  "generatedAt": "2026-10-19T17:06:38.161Z",
+  "contents": [
     {
-      ""id"": ""86ff78890446441cbd7f639cd3e1f4c5"",
-      ""place"": ""いっぷくや"",
-      ""characters"": [
+      "id": "86ff78890446441cbd7f639cd3e1f4c5",
+      "place": "いっぷくや",
+      "characters": [
         {
-          ""name"": ""スパクロ"",
-          ""image"": ""images/スパクロくん.png"",
-          ""order"": 1,
-          ""entryEffect"": ""pop"",
-          ""idleEffect"": ""float"",
-          ""x"": 50,
-          ""y"": 50,
-          ""size"": 100,
-          ""delay"": 0,
-          ""duration"": 700
+          "name": "スパクロ",
+          "image": "images/スパクロくん.png",
+          "order": 1,
+          "entryEffect": "pop",
+          "idleEffect": "float",
+          "x": 50,
+          "y": 50,
+          "size": 100,
+          "delay": 0,
+          "duration": 700
         },
         {
-          ""name"": ""タラバガニちゃん"",
-          ""image"": ""images/タラバガニちゃん.jpg"",
-          ""order"": 1,
-          ""entryEffect"": ""fade"",
-          ""idleEffect"": ""shake"",
-          ""x"": 50,
-          ""y"": 50,
-          ""size"": 100,
-          ""delay"": 0,
-          ""duration"": 700
+          "name": "タラバガニちゃん",
+          "image": "images/タラバガニちゃん.jpg",
+          "order": 1,
+          "entryEffect": "fade",
+          "idleEffect": "shake",
+          "x": 50,
+          "y": 50,
+          "size": 100,
+          "delay": 0,
+          "duration": 700
         },
         {
-          ""name"": ""ハチグラサン"",
-          ""image"": ""images/ハチグラサン.png"",
-          ""order"": 1,
-          ""entryEffect"": ""pop"",
-          ""idleEffect"": ""float"",
-          ""x"": 50,
-          ""y"": 50,
-          ""size"": 100,
-          ""delay"": 0,
-          ""duration"": 700
+          "name": "ハチグラサン",
+          "image": "images/ハチグラサン.png",
+          "order": 1,
+          "entryEffect": "pop",
+          "idleEffect": "float",
+          "x": 50,
+          "y": 50,
+          "size": 100,
+          "delay": 0,
+          "duration": 700
         }
       ]
     }
