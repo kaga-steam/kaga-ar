@@ -3,7 +3,7 @@
   "schoolName": "山代小学校",
   "siteTitle": "山代温泉AR",
   "siteDescription": "カメラを起動して、キャラクターと一緒に撮影できます。",
-  "generatedAt": "2026-10-20T00:51:01.936Z",
+  "generatedAt": "2026-10-26T00:24:25.790Z",
   "contents": [
     {
       "id": "86ff78890446441cbd7f639cd3e1f4c5",
@@ -30,7 +30,7 @@
         {
           "name": "タラバガニちゃん",
           "image": "images/タラバガニちゃん.png",
-          "order": 2,
+          "order": 1,
           "entryEffect": "fade",
           "idleEffect": "shake",
           "x": 50,
@@ -48,12 +48,30 @@
         {
           "name": "ハチグラサン",
           "image": "images/ハチグラサン.png",
-          "order": 3,
+          "order": 1,
           "entryEffect": "pop",
           "idleEffect": "float",
           "x": 50,
           "y": 50,
           "size": 100,
+          "delay": 0,
+          "duration": 700
+        }
+      ]
+    },
+    {
+      "id": "6d2f8ec03b954c9d90b55f748e993010",
+      "place": "山代温泉３",
+      "characters": [
+        {
+          "name": "スパクロくんかおはめ",
+          "image": "images/スパクロくんかおはめ.png",
+          "order": 1,
+          "entryEffect": "pop",
+          "idleEffect": "float",
+          "x": 50,
+          "y": 50,
+          "size": 130,
           "delay": 0,
           "duration": 700
         }
